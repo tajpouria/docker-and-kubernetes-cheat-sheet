@@ -10,7 +10,7 @@ Docker is a platform or ecosystem contains a bunch of tools(e.g. Docker Client, 
 
 ### What's the container
 
-Briefly, when we run <mark>docker run sth</mark> this is what happening : Docker Cli reach to something named Docker Hub and download the **Image** contains the a bunch of configuration and dependencies to install and running a very specific program _the images file will store on hard drive_ and on some point of time you can use this image to create a container, so the container is an instance of image a we can look at as an running program, in other word a container is a program with it's own set of hardware resources that have it's own little space of memory it's own little space of networking and it's own little space of hard drive as well.
+Briefly, when we run `docker run sth` this is what happening : Docker Cli reach to something named Docker Hub and download the **Image** contains the a bunch of configuration and dependencies to install and running a very specific program _the images file will store on hard drive_ and on some point of time you can use this image to create a container, so the container is an instance of image a we can look at as an running program, in other word a container is a program with it's own set of hardware resources that have it's own little space of memory it's own little space of networking and it's own little space of hard drive as well.
 
 ## Docker for windows/mac
 
@@ -82,3 +82,172 @@ What just happened when we run this command:
 5. docker daemon will download hello-world image and store it on image cache _then we can install and rerun it later without reaching to docker hub_
 6. then docker server took that single file, load it on the memory to create a container of it run the program inside of it
 7. then hello-world program will run in the container and it's whole purpose is to print some text on the terminal
+
+## Manipulating docker cli
+
+### Create and running a container from an image
+
+> docker run hello-world
+
+Overriding default commands:
+
+> docker run busybox ls
+
+executing specified command in container
+
+output:
+
+```shell
+.
+..
+.dockerenv
+bin
+dev
+etc
+home
+proc
+root
+sys
+tmp
+usr
+var
+```
+
+### List all running containers
+
+> docker ps
+
+List all the containers the have been created:
+
+> docker ps --all
+
+### Container life cycle
+
+docker run = docker create + docker start -a
+
+creating a container:
+
+> docker create busy-box ls -a
+
+create a container and return it's id:
+
+```shell
+bd9fb4cd2ae040fb9413be7368d7a693f8e83780f6dcde92a65d6f8570fc045089
+```
+
+> docker ps --all
+
+output
+
+```shell
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+bd9fb4cd2ae0        busybox             "ls -a"             12 seconds ago      Created                                 exciting_hodgkin
+
+```
+
+container is in **Created** STATUS
+
+start the container with a watcher attached to it's output to print out on the terminal
+
+> docker start -a bd9fb4cd2ae040fb9413be7368d7a693f8e83780f6dcde92a65d6f8570fc045089
+
+output:
+
+```shell
+.
+..
+.dockerenv
+bin
+dev
+etc
+home
+proc
+root
+sys
+tmp
+usr
+var
+```
+
+> docker ps --all
+
+output
+
+```shell
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS                     PORTS               NAMES
+bd9fb4cd2ae0        busybox             "ls -a"             3 minutes ago       Exited (0) 7 seconds ago                       exciting_hodgkin
+
+```
+
+container is in **Exited** STATUS
+
+### Removing containers
+
+Remove all stopped containers, all dangling images, and all unused networks:
+
+> docker system prune
+
+You’ll be prompted to continue, use the `-f` or `--force` flag to bypass the prompt.
+
+Remove by CONTAINER_ID(s):
+
+> docker container rm CONTAINER_ID_1 CONTAINER_ID_2
+
+Remove all stopped containers:
+
+> docker container prune
+
+### Retrieving log output
+
+> docker logs CONTAINER_ID
+
+### Stop / kill container
+
+> docker stop CONTAINER_ID
+
+> docker kill CONTAINER_ID
+
+Recommended docker stop to stop a process it will automatically run docker kill command if container not stop after 10 sec
+
+### Executing command in a running container
+
+> docker run redis
+
+This command will create container and then start redis-server into it
+
+> docker ps
+
+output:
+
+```shell
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS               NAMES
+c7c021ce2637        redis               "docker-entrypoint.s…"   6 minutes ago       Up 6 minutes        6379/tcp            stupefied_lamport
+```
+
+> docker exec -it c7c021ce2637 redis-cli
+
+The `-it` flag makes the container to receive input; without specifying this flag the process will start but don't let us to issue the inputs
+
+### The it flag purpose
+
+Every processes (in docker container) that running on linux environment have three communication channel attach to it:
+this channels is using to communicate information either into the process or out of the process:
+
+-   STDIN: Comminute information into the process
+-   STDOUT: Convey information that coming out of the process
+-   STDERR: Covey information out of the process that kinds of like errors
+
+The `-it` flag is shorten of two separate`-i` and `-t` flag:
+
+-   -i flags mean when we run this command we are going to attach or terminal to the STDIN channel of running process
+-   -f briefly it make the out come texts show pretty(indent and etc)
+
+## Getting a command prompt in a container
+
+> docker exec -it 4aec7087de55 sh
+
+`sh` is some kind of command shell program like bash, zsh or ... that allow us to issue command on terminal. Traditionally a lots of containers that your going to be workings with contains sh program
+
+### Starting with a shell
+
+> docker run -it busybox sh

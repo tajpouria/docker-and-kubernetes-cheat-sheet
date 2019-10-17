@@ -197,6 +197,16 @@ Remove all stopped containers:
 
 > docker container prune
 
+### Removing images
+
+List of images
+
+> docker images --all
+
+Remove by IMAGE_ID(s):
+
+> docker image rm IMAGE_ID
+
 ### Retrieving log output
 
 > docker logs CONTAINER_ID
@@ -251,3 +261,59 @@ The `-it` flag is shorten of two separate`-i` and `-t` flag:
 ### Starting with a shell
 
 > docker run -it busybox sh
+
+## Building custom images through docker daemon
+
+Here is the steps we gonna go through:
+
+1.  setup Dockerfile: a plain text file that define how our **container** should behave in other word whats programs it contains and how it's behave when first startup
+2.  pass the Dockerfile to dockerCli and dockerCli will pass to dockerDaemon
+3.  dockerDaemon will look up to docker file and will create a **usable image** of it
+
+### Building a Dockerfile
+
+flow of crating a Dockerfile:
+
+1. specify a base image
+2. run some command to install additional programs
+3. specify a command to run on container startup
+
+./Dockerfile
+
+```Dockerfile
+# specify the base image
+FROM alpine
+
+# download and install additional programs
+RUN apk add --update redis
+
+# specify a command to run on container startup
+CMD ["redis-server"]
+```
+
+> docker build .
+
+> docker run ImageID
+
+What's happening after running `docker build .`
+
+1. dockerCli will pass DockerFile to dockerDaemon
+2. dockerDaemon look at the localCash to find the `base image` (in our case alpine) then either download it or not from it's library
+3. dockerDaemon will initialized the base image
+4. when dockerDaemon is about to running the `RUN` command it will create a `intermediate container` from the base image (in our case alpine)
+5. dockerDaemon will run the specified command into that intermediate container (in our case `apk add --update redis`) and take it file snapshot (the actual image or images that downloaded)
+6. dockerDaemon removing the intermediate container
+7. dockerDaemon will take the file snapshot and the starting command then make a temporary image of it
+
+### tagging an Image
+
+> docker build -t tajpouria/redis:latest .
+
+> docker run tajpouria/redis
+
+### Manual image generating with docker commit
+
+> docker run -it alpine sh
+> \#apk add --update redis
+
+> docker commit -c '["redis-server"]' CONTAINER_ID

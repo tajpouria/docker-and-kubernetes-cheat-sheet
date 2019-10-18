@@ -295,7 +295,7 @@ CMD ["redis-server"]
 
 > docker run ImageID
 
-What's happening after running `docker build .`
+What's happening after running `docker build .` _dot( . ) means the build context of the container_
 
 1. dockerCli will pass DockerFile to dockerDaemon
 2. dockerDaemon look at the localCash to find the `base image` (in our case alpine) then either download it or not from it's library
@@ -317,3 +317,31 @@ What's happening after running `docker build .`
 > \#apk add --update redis
 
 > docker commit -c '["redis-server"]' CONTAINER_ID
+
+## Building a simple server with docker
+
+./Dockerfile
+
+```Dockerfile
+# install node baseImage with alpine tag tie to it
+FROM node:alpine
+
+# specifying a working directory for application
+WORKDIR /usr/simpleServer
+
+# copy file(s) from [ path relative to building context ] to [ path into container relative to WORKDIR ]
+COPY ./package.json ./
+
+RUN npm i
+
+# separating COPY command because we don't want to reinstall all the dependencies after changing to source files
+COPY ./ ./
+
+CMD ["npm", "start"]
+```
+
+### Container port mapping
+
+> docker run -p 4000:8080 IMAGE_ID/NAME
+
+That's mean anytime that a request comes to port 8080 of `my machine` redirect it to port 8080 `inside the container`

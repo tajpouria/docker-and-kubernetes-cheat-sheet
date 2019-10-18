@@ -1,0 +1,9 @@
+version: "3"
+services:
+    redis-server:
+        image: "redis"
+    visits-server:
+        build: .
+        ports:
+            - "4000:8080"
+        restart: on-failure

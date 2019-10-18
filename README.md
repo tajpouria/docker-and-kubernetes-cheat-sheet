@@ -89,6 +89,10 @@ What just happened when we run this command:
 
 > docker run hello-world
 
+running and starting on the background
+
+> docker run -d busybox
+
 Overriding default commands:
 
 > docker run busybox ls
@@ -345,3 +349,111 @@ CMD ["npm", "start"]
 > docker run -p 4000:8080 IMAGE_ID/NAME
 
 That's mean anytime that a request comes to port 8080 of `my machine` redirect it to port 8080 `inside the container`
+
+## Docker compose with multiple local containers
+
+### Docker compose
+
+docker-compose is a separate cli installed with docker, used to start up multiple docker containers at the same time, automates some of the long-winded arguments we were passing to `docker run`
+
+### docker-compose.yml
+
+`docker-compose.yml` contains all the options we'd normally pass to docker-cli
+
+with this knowledge as an instance here is the containers we gonna create:
+
+-   redis-server: make it using redis image
+
+-   visits-server: make it using Dockerfile then connect it's port to local machine
+
+./docker-compose.yml
+
+```yml
+# the version of docker-compose
+version: "3"
+# type of containers
+services:
+    redis-server:
+        image: "redis" # use this image to build this container
+    visits-server:
+        build: . # build this container using Dockerfile in this directory
+        ports:
+            - "4000:8080" # map [local machine port]:[container port]
+```
+
+then we can us it connect our server to redis-container
+
+./index.ts
+
+```typescript
+const redisClient = redis.createClient({
+    host: "redis-server", // docker parse as an url
+    port: 6379
+});
+```
+
+./Dockerfile
+
+```Dockerfile
+FROM node:alpine
+
+WORKDIR ./usr/visits-server
+
+COPY ./package.json .
+
+RUN npm i
+
+COPY . .
+
+CMD ["npm", "start"]
+
+```
+
+### docker-compose commands
+
+-   docker run myImage:
+
+> docker-compose up
+
+> docker-compose up -d
+
+-   docker build . & docker run myImage **use when make change in images**
+
+> docker-compose up --build
+
+-   docker stop CONTAINER_ID
+
+> docker-compose down
+
+-   docker ps
+    > docker-compose ps
+
+### Container maintenance with compose
+
+### Restart policies
+
+-   **"no"**`( default )`: never attempts to restart this . container if it stops or crashes
+
+-   **always**: if this container stops `always` attempt to restart it
+
+-   **on-failure**: only restart the container stops with an `error code`
+
+-   **unless-stopped**: always restart unless we forcibly stop it _on cli_
+
+_just "no" have quote in yml files no will interpreted as false_
+
+./docker-compose.yml
+
+```yml
+version: "3"
+services:
+    visits-server:
+        restart: always
+```
+
+## Sundry
+
+### Node process exit status codes
+
+-   0: we exited and everything is OK
+-   1, 2, 3, etc: we exited because something went wrong

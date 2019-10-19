@@ -397,7 +397,7 @@ const redisClient = redis.createClient({
 ```Dockerfile
 FROM node:alpine
 
-WORKDIR ./usr/visits-server
+WORKDIR /usr/visits-server
 
 COPY ./package.json .
 
@@ -450,6 +450,152 @@ services:
     visits-server:
         restart: always
 ```
+
+## A productions grade workflow
+
+The process of development, testing and deployment and eventually on some point of time doing some additional development, additional testing and redeploy the application
+
+### A development image
+
+./Dockerfile.dev
+
+```Dockerfile
+FROM node:alpine
+
+WORKDIR /usr/react-app
+
+COPY ./package.json .
+
+RUN npm i
+
+COPY . .
+
+CMD ["npm", "run", "start"]
+```
+
+build Dockerfile with custom name using `-f` flag:
+
+> docker build -f Dockerfile .
+
+### Docker volumes
+
+With a dockerVolume we essentially setup some placeholder of sorts inside our container and instead of copy files we reference that file to the actual container in other word we mapping a folder inside a container to a folder outside a container
+
+using `-v` flag you can either bookmark a file or map it, for example in following command:
+
+_in following make sure the paths are absolute_
+
+> docker run -p 3000:8080 -v /usr/react-app/node_modules/ -v \$(pwd):/usr/react-app/ IMAGE_ID
+
+-   node_modules `book marked` means do not map this file with an external file
+-   and other files in **present working directory(pwd)** are mapped(referenced) to external files and folders
+
+### Shorthand with docker-compose
+
+./docker-compose.yml
+
+_the paths has to absolute_
+
+```yml
+version: "3"
+services:
+    react-app:
+        build: # specify costume named docker file to build
+            context: .
+            dockerfile: Dockerfile.dev # dockerfile spelling
+        ports:
+            - "3000:8080"
+        volumes:
+            - "/usr/rect-app/node_modules" # bookmark
+            - ".:/usr/react-app" # reference
+```
+
+### Live updating tests
+
+Here is two diffrend approach to run our tests
+
+-   attach the running container:
+
+> docker exec -it IMAGE_ID npm run test
+
+-   docker-compose
+
+```yml
+version: "3"
+services:
+    # rect-app ...
+    tests:
+        build:
+            context: .
+            dockerfile: Dockerfile.dev
+        volumes:
+            - "usr/react-app/node_modules"
+            - ".:/usr/rect-app"
+        command: ["npm", "run", "test"] # overriding startup command
+```
+
+is it any way to interact with test service:
+
+after running sh on container that is network between react-app and tests:
+
+-   > \# ps
+
+output:
+
+```shell
+PID   USER     TIME  COMMAND
+    1 root      0:00 npm
+   17 root      0:00 node /usr/react-app/node_modules/.bin/react-scripts start
+   24 root      0:05 node /usr/react-app/node_modules/react-scripts/scripts/start.js
+  130 root      0:00 sh
+  136 root      0:00 ps
+
+```
+
+as you see the primary process that is going on in this container with PID 1, but the problem is after running `docker attach CONTAINER_ID` it will automatically attach to primary process but for interacting to tests process we need to connect to start.js with PID of 24
+
+### A production image
+
+### Multi-step docker process
+
+Using this feature when we're gonna have multi blocks of configuration for instance in our application we're gonna have two block of configuration:
+
+1. build phase purpose:
+
+-   using node:alpine
+-   copy package.json
+-   install dependencies
+-   run npm run build
+
+2. run phase purpose:
+
+-   use nginx
+-   copy over the results of npm run build **(essentially all the we copy the build folder and the other stuff like(node:alpine, node_modules and etc) drop from the result container)**
+-   start nginx
+
+./Dockerfile
+
+```Dockerfile
+# tag the stage as builder
+FROM node:alpine as builder
+WORKDIR /usr/react-app
+COPY ./package.json .
+RUN npm i
+COPY . .
+RUN npm run build
+# the build folder we create at usr/react-app
+
+FROM nginx
+# copy build folder from builder stage into user/share/nginx/html and nginx will automatically serve it when startup
+COPY --from=builder /usr/react-app/build usr/share/nginx/html
+# nginx will automatically set start command
+```
+
+> docker build .
+
+_nginx default port is `80`_
+
+> docker run -p 8080:80 CONTAINER_ID
 
 ## Sundry
 

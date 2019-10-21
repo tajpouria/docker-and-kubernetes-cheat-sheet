@@ -453,6 +453,8 @@ services:
 
 ## A productions grade workflow
 
+[Following description project repository](https://github.com/tajpouria/Docker-Travis-Test)
+
 The process of development, testing and deployment and eventually on some point of time doing some additional development, additional testing and redeploy the application
 
 ### A development image
@@ -586,6 +588,8 @@ RUN npm run build
 # the build folder we create at usr/react-app
 
 FROM nginx
+# putting EXPOSE 80 like this do nothing automatically in most environment (e.g. development environment) and is some kind of communication of sorts between developers to understand it container needs to some port mapped to port 80 but aws elastic beans talks will look for this EXPOSE and mapped it automatically
+EXPOSE 80
 # copy build folder from builder stage into user/share/nginx/html and nginx will automatically serve it when startup
 COPY --from=builder /usr/react-app/build usr/share/nginx/html
 # nginx will automatically set start command
@@ -603,3 +607,47 @@ _nginx default port is `80`_
 
 -   0: we exited and everything is OK
 -   1, 2, 3, etc: we exited because something went wrong
+
+## Continues integration
+
+### Travis yml file configuration
+
+Here is the steps we're gonna put in this file
+
+-   tell the travis we need a copy of docker running to build the project and running the tests suits
+-   build the project using the Dockerfile.dev (cuz the our Dockerfile not contains dependencies to run tests)
+-   tell the travis how to run the test suits
+-   tell the travis how to deploy our project over to aws
+
+.travis.yml
+
+```yml
+# any time we use the docker we need to have super user permission
+sudo: required
+
+# we need a copy of docker
+services:
+    - docker
+
+# gonna have a series of different command that get executed before another process (in our case before the tests run)
+before_install:
+    - docker build -t tajpouria/docker-travis-test -f dockerfile.dev .
+# commands to run our tests suits
+# travis CI is gonna watch out the output of each of this command: if one of the scripts return exit with status code except 0 the travis gonna assume that the test suit is actually failed and our code is essentially broken
+# *** default behavior of npm run test is to hangout with output and not exit automatically so the travis will never gonna receive the exit status code we can exit the test after running it by specifying -- --coverage flag
+script:
+    - docker run tajpouria/docker-travis-test npm run test -- --coverage
+
+deploy:
+    provider: elasticbeanstalk
+    region: "us-east-1"
+    app: "react-docker"
+    env: "Docker-env"
+    bucket_name: "elasticbeanstalk-us-east-1-746123612876210"
+    bucket_path: "react-docker"
+    on:
+        branch: master
+    access_key_id: $AWS_ACCESS_KEY
+    secret_access_key:
+        secure: "$AWS_SECURE_KEY"
+```

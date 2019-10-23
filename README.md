@@ -601,13 +601,6 @@ _nginx default port is `80`_
 
 > docker run -p 8080:80 CONTAINER_ID
 
-## Sundry
-
-### Node process exit status codes
-
--   0: we exited and everything is OK
--   1, 2, 3, etc: we exited because something went wrong
-
 ## Continues integration
 
 ### Travis yml file configuration
@@ -650,4 +643,151 @@ deploy:
     access_key_id: $AWS_ACCESS_KEY
     secret_access_key:
         secure: "$AWS_SECURE_KEY"
+```
+
+## A Multi Container Application
+
+### docker-compose environment variables
+
+this is gonna set up a variable inside the container at **run-time** of the container:
+
+-   `variableName=value`
+-   `variableName` the value is taken from machine
+
+docker-compose.yml
+
+```yml
+version: "3"
+services:
+    postgres:
+        image: "postgres:latest"
+    redis:
+        image: "redis:latest"
+    nginx:
+        restart: always
+        build:
+            dockerfile: dockerfile.dev
+            context: ./nginx
+        ports:
+            - "3000:80"
+    api:
+        build:
+            dockerfile: Dockerfile.dev
+            context: ./api # it will find Dockerfile.dev into this context
+        volumes:
+            - usr/app/node_modules
+            - ./api :usr/app
+        environment: # specify environment variables
+            - REDIS_HOST=redis
+            - REDIS_PORT=6379
+            - PGUSER=postgres
+            - PGHOST=postgres
+            - PGDATABASE=postgres
+            - PGPASSWORD=postgres_password
+            - PGPORT=5432
+    client:
+        build:
+            dockerfile: Dockerfile.dev
+            context: ./client
+        volumes:
+            - usr/app/node_modules
+            - ./client:usr/app
+    worker:
+        build:
+            dockerfile: Dockerfile.dev
+            context: ./worker
+        volumes:
+            - usr/app/node_modules
+            - ./worker:usr/worker
+```
+
+### Nginx path routing
+
+#### default.conf
+
+In order to setup nginx in the application to route the request off the appropriate backend we're gonna create a file called `default.conf`, this is a very special file to we're gonna added to our nginx image this file is gonna add a little bit of configuration to implement this set of routing routes:
+
+-   tell nginx that is an 'upstream' server at client:3000 and server:5000
+-   listen on port 80
+-   if someone comes to '/' send them to client upstream
+-   if someone comes to '/api' send them to server upstream
+
+./nginx/default.conf
+
+```conf
+upstream client {
+    # notice ;
+    server client:3000;
+}
+
+upstream api{
+    server api:5000;
+}
+
+server {
+    listen 80;
+
+    location / {
+        proxy_pass http://client;
+    }
+
+    # react dev server request not handled WebSocket connection to ws Error
+    location /sockjs-node {
+        proxy_pass http://client;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+    }
+
+    location /api {
+        # rewrite will remove /api/ from request
+        rewrite /api/(.*) /$1 break;
+        proxy_pass http://api;
+    }
+}
+```
+
+#### build a custom nginx image from
+
+./nginx/Dockerfile.dev
+
+```dockerfile
+FROM nginx
+
+# override the default.conf
+COPY ./default.conf /etc/nginx/conf.d/default.conf
+```
+
+## Sundry
+
+### Node process exit status codes
+
+-   0: we exited and everything is OK
+-   1, 2, 3, etc: we exited because something went wrong
+
+### Redis
+
+#### Subscription
+
+```typescript
+const client = redis.createClient({
+    host,
+    key,
+    retry_strategy: () => 1000 // if ever loses the connection it's automatically try to reconnect every one second
+});
+
+const sub = client.duplicate(); // Duplicate all current options and return a new redisClient instance, to send regular command to redis while in subscriber mode, just open another connection with a new client.
+
+sub.on("message", (channel, message) => {
+    redisClient.hset("values", message, "hello"); // sets field in the hash stored at key to value e.g redis-cli>HSET my hash field1 "hello" redis-cli>HGET hash field1
+});
+sub.subscribe("insert");
+```
+
+#### hgetall
+
+Get the all values inside a hash
+
+```typescript
+redis.hgetall("values", (err, values) => values);
 ```

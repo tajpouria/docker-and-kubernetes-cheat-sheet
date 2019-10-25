@@ -646,6 +646,7 @@ deploy:
 ```
 
 ## A Multi Container Application
+
 [Following description project repository](https://github.com/tajpouria/Docker-Multiple-Container-Test)
 
 ### docker-compose environment variables
@@ -838,6 +839,84 @@ FROM nginx
 
 # override the default.conf
 COPY ./default.conf /etc/nginx/conf.d/default.conf
+```
+
+### A continuous integration and deployment workflow for multiple images
+
+-   push code to git repository (in this case github)
+-   travis automatically pulls the codes
+-   travis builds a test image, test code
+-   travis builds a production image
+-   travis pushes built production image to docker hub
+-   travis push project to AWS EB
+-   AWS EB pulls images from docker hun, deploys
+
+### Nginx on client
+
+./client/nginx/default.conf
+
+```conf
+server {
+    listen 3000;
+
+    location / {
+        root /user/share/nginx/html;
+        index index.html index.htm;
+        try_file $url $url/ /index.html; # *** make nginx works correctly with react-router
+    }
+}
+```
+
+./client/Dockerfile
+
+```Dockerfile
+FROM node:alpine as builder
+WORKDIR /usr/app
+COPY ./package.json .
+RUN npm i
+COPY . .
+RUN npm run build
+
+FROM nginx
+EXPOSE 3000
+COPY ./nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /usr/app/build /usr/share/nginx/html
+```
+
+### Pushing image to docker hub
+
+-   login to docker
+
+    > docker login
+
+-   push an image to docker hub
+
+    > docker push IMAGE_ID/TAG
+
+```yml
+sudo: required
+services:
+    - docker
+before_install:
+    - docker build -t tajpouria/react-app -f ./client/Dockerfile.dev ./client # *** make sure to specify client directly as build context
+script:
+    - docker run tajpouria/react-app npm run test -- --coverage
+
+after_success:
+    - docker build -t tajpouria/multi-nginx ./nginx
+    - docker build -t tajpouria/multi-postgres ./postgres
+    - docker build -t tajpouria/multi-worker ./worker
+    - docker build -t tajpouria/multi-server ./server
+    - docker build -t tajpouria/multi-client ./client
+    # login to docker-cli (using travis environment variables)
+    # retrieve the docker password from environment variable and essentially emit that as input to the next command stdin channel
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # take those images and push them to docker hub
+    - docker push tajpouria/multi-nginx
+    - docker push tajpouria/multi-postgres
+    - docker push tajpouria/multi-worker
+    - docker push tajpouria/multi-server
+    - docker push tajpouria/multi-client
 ```
 
 ## Sundry

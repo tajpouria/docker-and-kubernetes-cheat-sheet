@@ -627,9 +627,9 @@ before_install:
     - docker build -t tajpouria/docker-travis-test -f dockerfile.dev .
 # commands to run our tests suits
 # travis CI is gonna watch out the output of each of this command: if one of the scripts return exit with status code except 0 the travis gonna assume that the test suit is actually failed and our code is essentially broken
-# *** default behavior of npm run test is to hangout with output and not exit automatically so the travis will never gonna receive the exit status code we can exit the test after running it by specifying -- --coverage flag
+# *** default behavior of npm run test is to hangout with output and not exit automatically so the travis will never gonna receive the exit status code we can exit the test after running it by specifying -- --watchAll=false flag
 script:
-    - docker run tajpouria/docker-travis-test npm run test -- --coverage
+    - docker run tajpouria/docker-travis-test npm run test -- --watchAll=false
 
 deploy:
     provider: elasticbeanstalk

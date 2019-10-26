@@ -1,4 +1,4 @@
-# Docker And Kubernetes Series
+# Docker
 
 ## Why use docker
 
@@ -830,7 +830,7 @@ server {
 }
 ```
 
-#### build a custom nginx image from
+#### Build a custom nginx image from
 
 ./nginx/Dockerfile.dev
 
@@ -918,6 +918,110 @@ after_success:
     - docker push tajpouria/multi-server
     - docker push tajpouria/multi-client
 ```
+
+# Kubernetes
+
+## Why use kubernetes
+
+If we were use kubernetes we can have additional machines running containers and we could had a lot of control over whats these additional machines were doing or what container they were running
+
+### Kubernetes cluster
+
+A **cluster** in world of kubernetes is an assembly of **master** and one or more **nodes**
+
+-   a node is a virtual machine or a physical computer that use to run some number of different containers
+-   in world of kubernetes are these nodes that have been created is manged by something named master, master contains a sets of program on it that control what each of these nodes is running at any given time
+
+#### Kubernetes is a system for running many different containers over multiple different machines and used when you need to run many different containers with different images
+
+### Kubernetes in development and production
+
+For running kubernetes in development environment we using a program called **minikube**
+
+-   minikube is a command line tool and it's purpose is to setup tiny cluster on your local machine
+
+when we start using kubernetes on production environment we very frequently use what are called **manage solutions**
+
+-   managed solutions are referenced to outside cloud provides such as Amazon Elastic Container Service for Kubernetes (EKS), Google Cloud Kubernetes Engine (GKS) and etc, that will setup entire kubernetes cluster for you
+
+-   in order to interact with this cluster we're going to use a program name **kubectl**
+
+## Installing
+
+These instructions were tested on a laptop with the desktop version of Linux Mint 19 Cinnamon installed. Current Ubuntu desktop version's setup should be the same. Your experience may vary if using an RHEL / Arch / Other distribution or non desktop distribution like Ubuntu server, or lightweight distributions which may omit many expected tools.
+
+-   Install VirtualBox:
+
+Find your Linux distribution and download the .deb package, using a graphical installer here should be sufficient. If you use a package manager like apt to install from your terminal, you will likely get a fairly out of date version.
+
+https://www.virtualbox.org/wiki/Linux_Downloads
+
+After installing, check your installation to make sure it worked:
+
+> VBoxManage —version
+
+**For some reason Virtual box not worker for me and I used KVM instead:**
+
+-   Install KVM:
+
+https://help.ubuntu.com/community/KVM/Installation :
+
+> sudo apt-get install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
+
+https://askubuntu.com/questions/1050621/kvm-is-required-to-run-this-avd :
+
+> sudo adduser \$USER kvm
+
+https://minikube.sigs.k8s.io/docs/reference/drivers/kvm2/ :
+
+> virt-host-validate
+
+**Make sure no test failed**
+
+> minikube start --vm-driver=kvm2
+
+As an alternative you can use (or maybe you have to use) KVM instead of VirtualBox. Here are some great instructions that can be found in this post (Thanks to Nick L. for sharing):
+
+https://computingforgeeks.com/install-kvm-centos-rhel-ubuntu-debian-sles-arch/
+
+-   Install Kubectl
+
+In your terminal run the following:
+
+> curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+
+> sudo mv ./kubectl /usr/local/bin/kubectl
+
+Check your Installation:
+
+> kubectl version
+
+See also official docs:
+https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-kubectl-on-linux
+
+-   Install Minikube
+
+In your terminal run the following:
+
+> curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube
+
+> sudo install minikube /usr/local/bin
+
+Check your installation:
+
+minikube version
+
+Start Minikube:
+
+https://github.com/kubernetes/minikube/issues/2412 :
+
+> minikube delete
+
+> minikube start
+
+See also official docs:
+
+https://kubernetes.io/docs/tasks/tools/install-minikube/
 
 ## Sundry
 

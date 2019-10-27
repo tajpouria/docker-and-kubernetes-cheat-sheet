@@ -16,10 +16,10 @@ Briefly, when we run `docker run sth` this is what happening : Docker Cli reach 
 
 Contains:
 
--   Docker Client (Docker CLI)
-    Tool that we are going to issue commands to
--   Docker Server (Docker Daemon)
-    Tool that is responsible for creating images, running containers and etc
+- Docker Client (Docker CLI)
+  Tool that we are going to issue commands to
+- Docker Server (Docker Daemon)
+  Tool that is responsible for creating images, running containers and etc
 
 ## Installing Docker Engine - Community and Docker-Compose
 
@@ -247,14 +247,14 @@ The `-it` flag makes the container to receive input; without specifying this fla
 Every processes (in docker container) that running on linux environment have three communication channel attach to it:
 this channels is using to communicate information either into the process or out of the process:
 
--   STDIN: Comminute information into the process
--   STDOUT: Convey information that coming out of the process
--   STDERR: Covey information out of the process that kinds of like errors
+- STDIN: Comminute information into the process
+- STDOUT: Convey information that coming out of the process
+- STDERR: Covey information out of the process that kinds of like errors
 
 The `-it` flag is shorten of two separate`-i` and `-t` flag:
 
--   -i flags mean when we run this command we are going to attach or terminal to the STDIN channel of running process
--   -f briefly it make the out come texts show pretty(indent and etc)
+- -i flags mean when we run this command we are going to attach or terminal to the STDIN channel of running process
+- -f briefly it make the out come texts show pretty(indent and etc)
 
 ## Getting a command prompt in a container
 
@@ -362,9 +362,9 @@ docker-compose is a separate cli installed with docker, used to start up multipl
 
 with this knowledge as an instance here is the containers we gonna create:
 
--   redis-server: make it using redis image
+- redis-server: make it using redis image
 
--   visits-server: make it using Dockerfile then connect it's port to local machine
+- visits-server: make it using Dockerfile then connect it's port to local machine
 
 ./docker-compose.yml
 
@@ -373,12 +373,12 @@ with this knowledge as an instance here is the containers we gonna create:
 version: "3"
 # type of containers
 services:
-    redis-server:
-        image: "redis" # use this image to build this container
-    visits-server:
-        build: . # build this container using Dockerfile in this directory
-        ports:
-            - "4000:8080" # map [local machine port]:[container port]
+  redis-server:
+    image: "redis" # use this image to build this container
+  visits-server:
+    build: . # build this container using Dockerfile in this directory
+    ports:
+      - "4000:8080" # map [local machine port]:[container port]
 ```
 
 then we can us it connect our server to redis-container
@@ -387,8 +387,8 @@ then we can us it connect our server to redis-container
 
 ```typescript
 const redisClient = redis.createClient({
-    host: "redis-server", // docker parse as an url
-    port: 6379
+  host: "redis-server", // docker parse as an url
+  port: 6379
 });
 ```
 
@@ -411,34 +411,34 @@ CMD ["npm", "start"]
 
 ### docker-compose commands
 
--   docker run myImage:
+- docker run myImage:
 
 > docker-compose up
 
 > docker-compose up -d
 
--   docker build . & docker run myImage **use when make change in images**
+- docker build . & docker run myImage **use when make change in images**
 
 > docker-compose up --build
 
--   docker stop CONTAINER_ID
+- docker stop CONTAINER_ID
 
 > docker-compose down
 
--   docker ps
-    > docker-compose ps
+- docker ps
+  > docker-compose ps
 
 ### Container maintenance with compose
 
 ### Restart policies
 
--   **"no"**`( default )`: never attempts to restart this . container if it stops or crashes
+- **"no"**`( default )`: never attempts to restart this . container if it stops or crashes
 
--   **always**: if this container stops `always` attempt to restart it
+- **always**: if this container stops `always` attempt to restart it
 
--   **on-failure**: only restart the container stops with an `error code`
+- **on-failure**: only restart the container stops with an `error code`
 
--   **unless-stopped**: always restart unless we forcibly stop it _on cli_
+- **unless-stopped**: always restart unless we forcibly stop it _on cli_
 
 _just "no" have quote in yml files no will interpreted as false_
 
@@ -447,8 +447,8 @@ _just "no" have quote in yml files no will interpreted as false_
 ```yml
 version: "3"
 services:
-    visits-server:
-        restart: always
+  visits-server:
+    restart: always
 ```
 
 ## A productions grade workflow
@@ -489,8 +489,8 @@ _in following make sure the paths are absolute_
 
 > docker run -p 3000:8080 -v /usr/react-app/node_modules/ -v \$(pwd):/usr/react-app/ IMAGE_ID
 
--   node_modules `book marked` means do not map this file with an external file
--   and other files in **present working directory(pwd)** are mapped(referenced) to external files and folders
+- node_modules `book marked` means do not map this file with an external file
+- and other files in **present working directory(pwd)** are mapped(referenced) to external files and folders
 
 ### Shorthand with docker-compose
 
@@ -501,46 +501,46 @@ _the paths has to absolute_
 ```yml
 version: "3"
 services:
-    react-app:
-        build: # specify costume named docker file to build
-            context: .
-            dockerfile: Dockerfile.dev # dockerfile spelling
-        ports:
-            - "3000:8080"
-        volumes:
-            - "/usr/rect-app/node_modules" # bookmark
-            - ".:/usr/react-app" # reference
+  react-app:
+    build: # specify costume named docker file to build
+      context: .
+      dockerfile: Dockerfile.dev # dockerfile spelling
+    ports:
+      - "3000:8080"
+    volumes:
+      - "/usr/rect-app/node_modules" # bookmark
+      - ".:/usr/react-app" # reference
 ```
 
 ### Live updating tests
 
 Here is two diffrend approach to run our tests
 
--   attach the running container:
+- attach the running container:
 
 > docker exec -it IMAGE_ID npm run test
 
--   docker-compose
+- docker-compose
 
 ```yml
 version: "3"
 services:
-    # rect-app ...
-    tests:
-        build:
-            context: .
-            dockerfile: Dockerfile.dev
-        volumes:
-            - "usr/react-app/node_modules"
-            - ".:/usr/rect-app"
-        command: ["npm", "run", "test"] # overriding startup command
+  # rect-app ...
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - "usr/react-app/node_modules"
+      - ".:/usr/rect-app"
+    command: ["npm", "run", "test"] # overriding startup command
 ```
 
 is it any way to interact with test service:
 
 after running sh on container that is network between react-app and tests:
 
--   > \# ps
+- > \# ps
 
 output:
 
@@ -564,16 +564,16 @@ Using this feature when we're gonna have multi blocks of configuration for insta
 
 1. build phase purpose:
 
--   using node:alpine
--   copy package.json
--   install dependencies
--   run npm run build
+- using node:alpine
+- copy package.json
+- install dependencies
+- run npm run build
 
 2. run phase purpose:
 
--   use nginx
--   copy over the results of npm run build **(essentially all the we copy the build folder and the other stuff like(node:alpine, node_modules and etc) drop from the result container)**
--   start nginx
+- use nginx
+- copy over the results of npm run build **(essentially all the we copy the build folder and the other stuff like(node:alpine, node_modules and etc) drop from the result container)**
+- start nginx
 
 ./Dockerfile
 
@@ -607,10 +607,10 @@ _nginx default port is `80`_
 
 Here is the steps we're gonna put in this file
 
--   tell the travis we need a copy of docker running to build the project and running the tests suits
--   build the project using the Dockerfile.dev (cuz the our Dockerfile not contains dependencies to run tests)
--   tell the travis how to run the test suits
--   tell the travis how to deploy our project over to aws
+- tell the travis we need a copy of docker running to build the project and running the tests suits
+- build the project using the Dockerfile.dev (cuz the our Dockerfile not contains dependencies to run tests)
+- tell the travis how to run the test suits
+- tell the travis how to deploy our project over to aws
 
 .travis.yml
 
@@ -620,29 +620,29 @@ sudo: required
 
 # we need a copy of docker
 services:
-    - docker
+  - docker
 
 # gonna have a series of different command that get executed before another process (in our case before the tests run)
 before_install:
-    - docker build -t tajpouria/docker-travis-test -f dockerfile.dev .
+  - docker build -t tajpouria/docker-travis-test -f dockerfile.dev .
 # commands to run our tests suits
 # travis CI is gonna watch out the output of each of this command: if one of the scripts return exit with status code except 0 the travis gonna assume that the test suit is actually failed and our code is essentially broken
 # *** default behavior of npm run test is to hangout with output and not exit automatically so the travis will never gonna receive the exit status code we can exit the test after running it by specifying -- --watchAll=false flag
 script:
-    - docker run tajpouria/docker-travis-test npm run test -- --watchAll=false
+  - docker run tajpouria/docker-travis-test npm run test -- --watchAll=false
 
 deploy:
-    provider: elasticbeanstalk
-    region: "us-east-1"
-    app: "react-docker"
-    env: "Docker-env"
-    bucket_name: "elasticbeanstalk-us-east-1-746123612876210"
-    bucket_path: "react-docker"
-    on:
-        branch: master
-    access_key_id: $AWS_ACCESS_KEY
-    secret_access_key:
-        secure: "$AWS_SECURE_KEY"
+  provider: elasticbeanstalk
+  region: "us-east-1"
+  app: "react-docker"
+  env: "Docker-env"
+  bucket_name: "elasticbeanstalk-us-east-1-746123612876210"
+  bucket_path: "react-docker"
+  on:
+    branch: master
+  access_key_id: $AWS_ACCESS_KEY
+  secret_access_key:
+    secure: "$AWS_SECURE_KEY"
 ```
 
 ## A Multi Container Application
@@ -653,61 +653,61 @@ deploy:
 
 this is gonna set up a variable inside the container at **run-time** of the container:
 
--   `variableName=value`
--   `variableName` the value is taken from machine
+- `variableName=value`
+- `variableName` the value is taken from machine
 
 docker-compose.yml
 
 ```yml
 version: "3"
 services:
-    postgres:
-    restart: "always"
+  postgres:
+  restart: "always"
+  build:
+    dockerfile: Dockerfile.dev
+    context: ./postgres
+  environment:
+    - "FILLA_DB_USER=docker"
+    - "FILLA_DB_PASSWORD=postgres_password"
+    - "FILLA_DB_DATABASE=multi_docker"
+  redis:
+    image: "redis:latest"
+  nginx:
+    restart: always
     build:
-        dockerfile: Dockerfile.dev
-        context: ./postgres
-    environment:
-        - "FILLA_DB_USER=docker"
-        - "FILLA_DB_PASSWORD=postgres_password"
-        - "FILLA_DB_DATABASE=multi_docker"
-    redis:
-        image: "redis:latest"
-    nginx:
-        restart: always
-        build:
-            dockerfile: dockerfile.dev
-            context: ./nginx
-        ports:
-            - "3000:80"
-    api:
-        build:
-            dockerfile: Dockerfile.dev
-            context: ./api # it will find Dockerfile.dev into this context
-        volumes:
-            - usr/app/node_modules
-            - ./api :usr/app # *** make sure to specify each volume to related folder
-        environment: # specify environment variables
-            - REDIS_HOST=redis
-            - REDIS_PORT=6379
-            - PGUSER=docker
-            - PGHOST=postgres
-            - PGDATABASE=multi_docker
-            - PGPASSWORD=postgres_password
-            - PGPORT=5432
-    client:
-        build:
-            dockerfile: Dockerfile.dev
-            context: ./client
-        volumes:
-            - usr/app/node_modules
-            - ./client:usr/app
-    worker:
-        build:
-            dockerfile: Dockerfile.dev
-            context: ./worker
-        volumes:
-            - usr/app/node_modules
-            - ./worker:usr/worker
+      dockerfile: dockerfile.dev
+      context: ./nginx
+    ports:
+      - "3000:80"
+  api:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./api # it will find Dockerfile.dev into this context
+    volumes:
+      - usr/app/node_modules
+      - ./api :usr/app # *** make sure to specify each volume to related folder
+    environment: # specify environment variables
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PGUSER=docker
+      - PGHOST=postgres
+      - PGDATABASE=multi_docker
+      - PGPASSWORD=postgres_password
+      - PGPORT=5432
+  client:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./client
+    volumes:
+      - usr/app/node_modules
+      - ./client:usr/app
+  worker:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./worker
+    volumes:
+      - usr/app/node_modules
+      - ./worker:usr/worker
 ```
 
 ### Postgres create init database
@@ -790,10 +790,10 @@ ADD ./init /docker-entrypoint-initdb.d/
 
 In order to setup nginx in the application to route the request off the appropriate backend we're gonna create a file called `default.conf`, this is a very special file to we're gonna added to our nginx image this file is gonna add a little bit of configuration to implement this set of routing routes:
 
--   tell nginx that is an 'upstream' server at client:3000 and server:5000
--   listen on port 80
--   if someone comes to '/' send them to client upstream
--   if someone comes to '/api' send them to server upstream
+- tell nginx that is an 'upstream' server at client:3000 and server:5000
+- listen on port 80
+- if someone comes to '/' send them to client upstream
+- if someone comes to '/api' send them to server upstream
 
 ./nginx/default.conf
 
@@ -843,13 +843,13 @@ COPY ./default.conf /etc/nginx/conf.d/default.conf
 
 ### A continuous integration and deployment workflow for multiple images
 
--   push code to git repository (in this case github)
--   travis automatically pulls the codes
--   travis builds a test image, test code
--   travis builds a production image
--   travis pushes built production image to docker hub
--   travis push project to AWS EB
--   AWS EB pulls images from docker hun, deploys
+- push code to git repository (in this case github)
+- travis automatically pulls the codes
+- travis builds a test image, test code
+- travis builds a production image
+- travis pushes built production image to docker hub
+- travis push project to AWS EB
+- AWS EB pulls images from docker hun, deploys
 
 ### Nginx on client
 
@@ -885,38 +885,38 @@ COPY --from=builder /usr/app/build /usr/share/nginx/html
 
 ### Pushing image to docker hub
 
--   login to docker
+- login to docker
 
-    > docker login
+  > docker login
 
--   push an image to docker hub
+- push an image to docker hub
 
-    > docker push IMAGE_ID/TAG
+  > docker push IMAGE_ID/TAG
 
 ```yml
 sudo: required
 services:
-    - docker
+  - docker
 before_install:
-    - docker build -t tajpouria/react-app -f ./client/Dockerfile.dev ./client # *** make sure to specify client directly as build context
+  - docker build -t tajpouria/react-app -f ./client/Dockerfile.dev ./client # *** make sure to specify client directly as build context
 script:
-    - docker run tajpouria/react-app npm run test -- --coverage
+  - docker run tajpouria/react-app npm run test -- --coverage
 
 after_success:
-    - docker build -t tajpouria/multi-nginx ./nginx
-    - docker build -t tajpouria/multi-postgres ./postgres
-    - docker build -t tajpouria/multi-worker ./worker
-    - docker build -t tajpouria/multi-server ./server
-    - docker build -t tajpouria/multi-client ./client
-    # login to docker-cli (using travis environment variables)
-    # retrieve the docker password from environment variable and essentially emit that as input to the next command stdin channel
-    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
-    # take those images and push them to docker hub
-    - docker push tajpouria/multi-nginx
-    - docker push tajpouria/multi-postgres
-    - docker push tajpouria/multi-worker
-    - docker push tajpouria/multi-server
-    - docker push tajpouria/multi-client
+  - docker build -t tajpouria/multi-nginx ./nginx
+  - docker build -t tajpouria/multi-postgres ./postgres
+  - docker build -t tajpouria/multi-worker ./worker
+  - docker build -t tajpouria/multi-server ./server
+  - docker build -t tajpouria/multi-client ./client
+  # login to docker-cli (using travis environment variables)
+  # retrieve the docker password from environment variable and essentially emit that as input to the next command stdin channel
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take those images and push them to docker hub
+  - docker push tajpouria/multi-nginx
+  - docker push tajpouria/multi-postgres
+  - docker push tajpouria/multi-worker
+  - docker push tajpouria/multi-server
+  - docker push tajpouria/multi-client
 ```
 
 # Kubernetes
@@ -929,8 +929,8 @@ If we were use kubernetes we can have additional machines running containers and
 
 A **cluster** in world of kubernetes is an assembly of **master** and one or more **nodes**
 
--   a node is a virtual machine or a physical computer that use to run some number of different containers
--   in world of kubernetes are these nodes that have been created is manged by something named master, master contains a sets of program on it that control what each of these nodes is running at any given time
+- a node is a virtual machine or a physical computer that use to run some number of different containers
+- in world of kubernetes are these nodes that have been created is manged by something named master, master contains a sets of program on it that control what each of these nodes is running at any given time
 
 #### Kubernetes is a system for running many different containers over multiple different machines and used when you need to run many different containers with different images
 
@@ -938,19 +938,19 @@ A **cluster** in world of kubernetes is an assembly of **master** and one or mor
 
 For running kubernetes in development environment we using a program called **minikube**
 
--   minikube is a command line tool and it's purpose is to setup tiny cluster on your local machine
+- minikube is a command line tool and it's purpose is to setup tiny cluster on your local machine
 
 when we start using kubernetes on production environment we very frequently use what are called **manage solutions**
 
--   managed solutions are referenced to outside cloud provides such as Amazon Elastic Container Service for Kubernetes (EKS), Google Cloud Kubernetes Engine (GKS) and etc, that will setup entire kubernetes cluster for you
+- managed solutions are referenced to outside cloud provides such as Amazon Elastic Container Service for Kubernetes (EKS), Google Cloud Kubernetes Engine (GKS) and etc, that will setup entire kubernetes cluster for you
 
--   in order to interact with this cluster we're going to use a program name **kubectl**
+- in order to interact with this cluster we're going to use a program name **kubectl**
 
 ## Installing
 
 These instructions were tested on a laptop with the desktop version of Linux Mint 19 Cinnamon installed. Current Ubuntu desktop version's setup should be the same. Your experience may vary if using an RHEL / Arch / Other distribution or non desktop distribution like Ubuntu server, or lightweight distributions which may omit many expected tools.
 
--   Install VirtualBox:
+- Install VirtualBox:
 
 Find your Linux distribution and download the .deb package, using a graphical installer here should be sufficient. If you use a package manager like apt to install from your terminal, you will likely get a fairly out of date version.
 
@@ -962,7 +962,7 @@ After installing, check your installation to make sure it worked:
 
 **For some reason Virtual box not worker for me and I used KVM instead:**
 
--   Install KVM:
+- Install KVM:
 
 https://help.ubuntu.com/community/KVM/Installation :
 
@@ -984,7 +984,7 @@ As an alternative you can use (or maybe you have to use) KVM instead of VirtualB
 
 https://computingforgeeks.com/install-kvm-centos-rhel-ubuntu-debian-sles-arch/
 
--   Install Kubectl
+- Install Kubectl
 
 In your terminal run the following:
 
@@ -999,7 +999,7 @@ Check your Installation:
 See also official docs:
 https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-kubectl-on-linux
 
--   Install Minikube
+- Install Minikube
 
 In your terminal run the following:
 
@@ -1011,7 +1011,7 @@ Check your installation:
 
 minikube version
 
-Start Minikube:
+- Start Minikube:
 
 https://github.com/kubernetes/minikube/issues/2412 :
 
@@ -1023,12 +1023,111 @@ See also official docs:
 
 https://kubernetes.io/docs/tasks/tools/install-minikube/
 
+- Gets the status of a local kubernetes cluster:
+
+> minikube status
+
+- display cluster info
+
+> kubectl cluster-info
+
+- VM ip
+
+> minikube ip
+
+### Mapping existing knowledge
+
+|                         docker-compose                         |                    kubernetes                    | get a simple container running on our local kubernetes cluster running |
+| :------------------------------------------------------------: | :----------------------------------------------: | :--------------------------------------------------------------------: |
+| Each entry can optionally get docker-compose to build an image | Kubernetes expect all images to already be built |              Make sure our images is hosted on docker hub              |
+|       Each entry represent a container we want to create       |  One config file per _object_ we want ot create  |              Make one config file to create the container              |
+|     Each entry defines the networking requirements (ports)     |    We have to manually set up all networking     |               Make one config file to set up networking                |
+
+### Adding configuration
+
+#### terminology
+
+**Config file describe the containers(or objects in k8s) we want**
+
+the **object** in k8s world is a thing!! that will create in our cluster to make it behave the way we expect
+
+- Pod: After we run `minikube start` it will create a virtual machine on computer we refer to that machine as a **node** we'll use this node to run different objects, one of this most basic object that we gonna create is refer as a **Pod**, a pod essentially is a grouping of very **closely**Jjk related container(s) with a very common purpose
+
+- Service : we `Service` object type we we're gonna set up networking in a k8s cluster
+
+- NodePort: is a **sub object type of Service object type** every time a request coming to **kubeProxy**(the single window to communicate to world outside of the node) then it will reach the nodePort and nodePort will link it to a container inside a Pod _nodePort is only uses for development purposes_
+
+./simplek8s/client-pod.yml
+
+```yml
+apiVersion: v1 # Each API version defines a different set of object we can use
+kind: Pod # Specify the object type we want to create, object serve different purpose for e.g. Pod: running a container, Service: networking
+metadata:
+  name: client-pod # the name of pod that get created
+  labels:
+    component: web # label that Pod to be able to select that from Service
+spec:
+  containers:
+    - name: client
+    image: tajpouria/multi-client
+      ports:
+      - containerPort: 3000 # on this container we want to expose port 3000 to the outside world
+```
+
+./simplek8s/client-node-port.yml
+
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-node-port
+spec:
+  type: NodePort # exposes a container to the outside world(only good for development purposes)
+  ports:
+    - port: 3000 # the port that other Pod in our cluster can access to this Pod targetPort: 3000 # the port inside this Pod that we going open up traffic to nodePort: 31515 # the port we're going to use outside the node (in browser) in order to access to access the Pod ***(default: random number between 30000 and 32767)
+       selector:
+    component: web # select web pod by it's label
+```
+
+- Feed the config file to kubctl
+
+> kubectl apply -f \<path to the file\>
+
+- Retrieve information about a running object
+
+> kubectl get \<object name\>
+
+e.g. print the status of all running pods
+
+> kubectl get pods
+
+e.g. print the status of all services
+
+> kubectl get services
+
+#### After applying Pod and nodePort configuration the node is available on NODE_IP:nodePort:
+
+NODE_IP:
+
+> minikube ip
+
+nodePort: 31515
+
+### the entire deployment workflow
+
+- When we run `kubectl apply -f <filename>` the file is taken and pass into master
+- On the master kube-apiServer will read configuration file and interpret it in some fashion
+- kube-apiServer will update the cluster status based upon of configuration file and node(s) status
+- kube-apiServer will tell node(s) that which container and how much copy of it should run
+- each node have a copy of docker into it and it will use it to reach into docker hub to create container(s) of it
+- kube-apiServer will update the status
+
 ## Sundry
 
 ### Node process exit status codes
 
--   0: we exited and everything is OK
--   1, 2, 3, etc: we exited because something went wrong
+- 0: we exited and everything is OK
+- 1, 2, 3, etc: we exited because something went wrong
 
 ### Redis
 
@@ -1036,15 +1135,15 @@ https://kubernetes.io/docs/tasks/tools/install-minikube/
 
 ```typescript
 const client = redis.createClient({
-    host,
-    key,
-    retry_strategy: () => 1000 // if ever loses the connection it's automatically try to reconnect every one second
+  host,
+  key,
+  retry_strategy: () => 1000 // if ever loses the connection it's automatically try to reconnect every one second
 });
 
 const sub = client.duplicate(); // Duplicate all current options and return a new redisClient instance, to send regular command to redis while in subscriber mode, just open another connection with a new client.
 
 sub.on("message", (channel, message) => {
-    redisClient.hset("values", message, "hello"); // sets field in the hash stored at key to value e.g redis-cli>HSET my hash field1 "hello" redis-cli>HGET hash field1
+  redisClient.hset("values", message, "hello"); // sets field in the hash stored at key to value e.g redis-cli>HSET my hash field1 "hello" redis-cli>HGET hash field1
 });
 sub.subscribe("insert");
 

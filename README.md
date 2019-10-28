@@ -1105,6 +1105,14 @@ e.g. print the status of all services
 
 > kubectl get services
 
+- Show description of a specific resource or group of resource
+
+> kubectl describe \<resource\J>
+
+e.g a pod description
+
+> kubectl describe client-pod
+
 #### After applying Pod and nodePort configuration the node is available on NODE_IP:nodePort:
 
 NODE_IP:

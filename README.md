@@ -862,7 +862,7 @@ server {
     location / {
         root /user/share/nginx/html;
         index index.html index.htm;
-        try_file $url $url/ /index.html; # *** make nginx works correctly with react-router
+        try_file $url $url/ /index.html; # *** make nginx works correctly with react-router *** for some reason this line have an issue with k8s pod configuration so i deleted this line on tajpouria/multi-client:v3 
     }
 }
 ```
@@ -1019,6 +1019,10 @@ https://github.com/kubernetes/minikube/issues/2412 :
 
 > minikube start
 
+in order to stop VM
+
+> minikube stop
+
 See also official docs:
 
 https://kubernetes.io/docs/tasks/tools/install-minikube/
@@ -1107,11 +1111,19 @@ e.g. print the status of all services
 
 - Show description of a specific resource or group of resource
 
-> kubectl describe \<resource\J>
+> kubectl describe \<object type\> \<object name\>
 
 e.g a pod description
 
 > kubectl describe client-pod
+
+- Delete an object
+
+> kubectl delete -f \<path to the file that used to create that object \>
+
+e.g delete the client-pod
+
+> kubectl delete client-pod.yml
 
 #### After applying Pod and nodePort configuration the node is available on NODE_IP:nodePort:
 
@@ -1129,6 +1141,82 @@ nodePort: 31515
 - kube-apiServer will tell node(s) that which container and how much copy of it should run
 - each node have a copy of docker into it and it will use it to reach into docker hub to create container(s) of it
 - kube-apiServer will update the status
+
+## Maintaining sets of container with deployment
+
+### Pods downwards
+
+With the Pods configured as container wrapper there is just a few fields available that we can changed and maintain:
+
+| Pod Configuration | Able to change |
+| :---------------: | :------------: |
+|    containers     |       no       |
+|       name        |       no       |
+|       ports       |       no       |
+|       image       |      yes       |
+
+And this is kind of downward for Pods and because of this reason and some other reason Pods is only appropriate for development purposes
+
+### Deployment
+
+Deployment is a kind of object type that help us to:
+
+- runs and manage a sets of identical Pods one or more
+- monitoring the state of Pods and change it if it's necessary
+- is appropriate of both development and production
+
+./simplek8s/client-deployment.yml
+
+```yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-deployment
+spec:
+  replicas: 1 # the number of Pods that this Deployment is going to create
+  selector: # uses by Deployment to handle over Pods after it's has been created
+    matchLabels:
+      component: web
+  template: # configuration of every single Pod that will created by this deployment
+    metadata:
+      labels:
+        component: web
+    spec:
+      containers:
+        - name: client
+          image: tajpouria/multi-client
+          ports:
+            - containerPort: 3000
+```
+
+_delete client-pod_
+
+> kubectl delete -f client-pod.yml
+
+> kubectl apply -f client-deployment.yml
+
+### Update image version
+
+Here's the steps we going through:
+
+- Tag the image with a version number and push it to docker hub
+- Run the kubectl command that forcing that deployment to use new the new image version:
+
+> kubectl set image \<object type\>/\<object name\> \<container name\>=\<new image to use\>
+
+e.g.
+
+> kubectl set image Deployment/client-deployment client=tajpouria/multi-client:v2
+
+### Configure the VM machine to use your dockerServer
+
+In order to access the **dockerServer instance on VM(node)** from your **current terminal** window use following command:
+
+> eval \$(minikube docker-env)
+
+_this command exports a sets of env-variables that uses by docker to decide which containers it should try to connect to_
+
+**this configuration only works on your current terminal window**
 
 ## Sundry
 

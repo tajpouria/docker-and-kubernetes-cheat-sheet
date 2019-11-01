@@ -647,7 +647,7 @@ deploy:
 
 ## A Multi Container Application
 
-[Following description project repository](https://github.com/tajpouria/Docker-Multiple-Container-Test)
+[Following description project repository **/branch master**](https://github.com/tajpouria/Docker-Multiple-Container-Test/tree/master)
 
 ### docker-compose environment variables
 
@@ -860,9 +860,9 @@ server {
     listen 3000;
 
     location / {
-        root /user/share/nginx/html;
+        root /usr/share/nginx/html; # /usr
         index index.html index.htm;
-        try_file $url $url/ /index.html; # *** make nginx works correctly with react-router *** for some reason this line have an issue with k8s pod configuration so i deleted this line on tajpouria/multi-client:v3 
+        try_file $url $url/ /index.html; # *** make nginx works correctly with react-router *** for some reason this line have an issue with k8s pod configuration so i deleted this line on tajpouria/multi-client:v3
     }
 }
 ```
@@ -1095,7 +1095,7 @@ spec:
 
 - Feed the config file to kubctl
 
-> kubectl apply -f \<path to the file\>
+> kubectl apply -f \<path to the file or the folder contains all config files\>
 
 - Retrieve information about a running object
 
@@ -1109,6 +1109,18 @@ e.g. print the status of all services
 
 > kubectl get services
 
+e.g. print the status of all persistent volumes
+
+> kubectl get pv
+
+e.g. print the status of all persistent volumes claims
+
+> kubectl get pvc
+
+e.g. print secrets
+
+> kubectl get secrets
+
 - Show description of a specific resource or group of resource
 
 > kubectl describe \<object type\> \<object name\>
@@ -1119,11 +1131,20 @@ e.g a pod description
 
 - Delete an object
 
-> kubectl delete -f \<path to the file that used to create that object \>
+1.  delete by config file
+    > kubectl delete -f \<path to the file that used to create that object \>
+        e.g delete the client-pod
+    > kubectl delete client-pod.yml
+2.  delete by object type
+    > kubectl delete deployment client-deployment
 
-e.g delete the client-pod
+- Get Pod logs
 
-> kubectl delete client-pod.yml
+> kubectl logs \<Pod name\>
+
+- get all the different options that k8s has to create a persistent volume
+
+> kubectl get storageclass
 
 #### After applying Pod and nodePort configuration the node is available on NODE_IP:nodePort:
 
@@ -1218,6 +1239,194 @@ _this command exports a sets of env-variables that uses by docker to decide whic
 
 **this configuration only works on your current terminal window**
 
+## A multi container Application with k8s
+
+[Following description project repository **/branch k8s**](https://github.com/tajpouria/Docker-Multiple-Container-Test/tree/k8s)
+
+![](./assets/multi-container-k8s.png)
+
+### NodePort vs ClusterIP
+
+In world of k8s we use services to setup networking in a cluster; NodePort and ClusterIP are both kind of services **NodePort** is uses whenever we going to setup networking between a Pod and **outside world** however **ClusterIP** is using for setup networking between a Pod and **other cluster objects**
+
+### ClusterIp Service
+
+./k8s/client-cluster-ip-service.yml
+
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-cluster-ip-services
+spec:
+  type: ClusterIP
+  selector:
+    component: web
+    ports:
+      - port: 3000 # other objects can access this ClusterIP through this port
+        targetPort: 3000 # Pod port
+```
+
+### Combining multiple config file into one
+
+./k8s/api-config.yml
+
+```yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      component: api
+  template:
+    metadata:
+      labels:
+        component: api
+    spec:
+      containers:
+        - name: api
+          image: tajpouria/multi-api
+          ports:
+            - containerPort: 5000
+--- # *** separate each config file with 3 dashes
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-cluster-ip-services
+spec:
+  type: ClusterIP
+  selector:
+    component: api
+  ports:
+    - port: 5000
+      targetPort: 5000
+```
+
+### K8s persistence volume claim
+
+K8s volumes is about how to persisting data outside of a container because that data is something that we care about and we want to persisted across the restarts or terminations of a given container
+
+#### The word Volumes in world of k8s is an Object that essentially allows a container to persistent data at the Pod level
+
+#### In this section we're not gonna use k8s's Volumes we want use pe Persistent Volume Claim and Persistent Volume
+
+### K8s's Volumes vs PersistentVolume
+
+![](assets/k8s_volume_vs_pesistentVolume.png)
+
+### Persistent Volume Claim (PVC) vs Persistent Volume (PV)
+
+The **Persistent Volume Claim is an advertizement of options** we can ask for one those options inside our Pod config then k8s is going to look the existing store of **Persistent Volume** and it's going to either give you a volume that's been created ahead of time or attempt to create one on the fly
+
+### terminology
+
+- accessMods:
+  1. ReadWriteOnce: can read and write by a single node at a time
+  2. ReadWriteMany: can read by multiple node at the same time
+  3. ReadOnlyMany: can read and write by multiple node at the same time
+
+./k8s/database-persistent-volume-claim.yml
+
+```yml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: database-persistent-volume-claim
+spec:
+  accessMods:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2gi
+```
+
+### Designing a PVC in Pod Template
+
+./k8s/postgres-deployment.yml
+
+```yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: postgres
+  template:
+    metadata:
+      labels:
+        component: postgres
+    spec:
+      volumes: # allocate the storage
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: database-persistent-volume-claim # name of created PV on node
+      containers:
+        - name: postgres
+          image: tajpouria/multi-postgres
+          ports:
+            - containerPort: 5432
+          volumeMounts: # using the storage
+            - name: postgres-storage # the name of storage
+              mountPath: /var/lib/postgresql/data # store this path (in this case postgres default data storing path)
+              subPath: postgres # sore the data inside a folder name postgres on the actual PV (postgres needs that!!)
+          env:
+            - name: PGPASSWORD # postgres will use this password (PGPASSWORD) as default password
+              valueFrom:
+                secretKeyRef:
+                  name: pgpassword
+                  key: PGPASSWORd
+```
+
+### Environment variables in k8s
+
+Securely stores a piece of information in the cluster, such as a database password
+
+> kubectl create secret generic \<secret_name\> --from-literal key=value
+
+e.g.
+
+> kubectl create secret generic pgpassword --from-literal PGPASSWORD=1234asdf
+
+#### Constant variables
+
+```yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      component: api
+  template:
+    metadata:
+      labels:
+        component: api
+    spec:
+      containers:
+        - name: api
+          image: tajpouria/multi-api
+          ports:
+            - containerPort: 5000
+          env: # environment variables
+            - name: REDISHOST
+              value: redis-cluster-ip-service # *** once you needs other pods set pods_name as URL
+            - name: REDISPORT
+              value: "5432" # make sure pass string (Error: cannot convert int64 into sting!)
+            - name: PGPASSWORD
+              valueFrom: # getting the key from SecretObject
+                secretKeyRef:
+                  name: pgpassword # the name of the secret
+                  key: PGPASSWORD # a secret can have multiple keys and we should specify which key we want
+```
+
 ## Sundry
 
 ### Node process exit status codes
@@ -1253,4 +1462,22 @@ Get the all values inside a hash
 
 ```typescript
 redis.hgetall("values", (err, values) => values);
+```
+
+### travis
+
+#### Safelisting or Blocklisting Branches
+
+```yml
+# blocklist
+branches:
+  except:
+  - legacy
+  - experimental
+
+# safelist
+branches:
+  only:
+  - master
+  - stable
 ```

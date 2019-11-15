@@ -1427,6 +1427,59 @@ spec:
                   key: PGPASSWORD # a secret can have multiple keys and we should specify which key we want
 ```
 
+## Handling traffic with ingress controller
+
+Ingress is a type of services that is going to give some amount of traffic into our application
+
+**In this case we're gonna use a project name [ kubernetes/ingress-nginx ](https://github.com/kubernetes/ingress-nginx)**
+
+### How ingress services created behind the scenes
+
+- create a config file and pass to KubeCTL in order to create an ingress service
+- KubeCTL will create an `object` inside of kubernetes called `controller`
+- this object will compare current state and desired state
+- then object will create a nginx Pod that have many particular rules that make sure the traffic that comes in will sent of to appropriate service
+
+### Ingress-nginx installation guide https://kubernetes.github.io/ingress-nginx/deploy/
+
+The following Mandatory Command is required for all deployments:
+
+> kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
+
+minikube:
+
+> minikube addons enable ingress
+
+### Configure ingress-service.yml
+
+./k8s/ingress-service.yml
+
+```yml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-service
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            backend:
+              serviceName: client-cluster-ip-service
+              servicePort: 3000
+          - path: /api/
+            backend:
+              serviceName: server-cluster-ip-service
+              servicePort: 5000
+```
+
+### Minikube dashboard
+
+> minikube dashboard
+
 ## Sundry
 
 ### Node process exit status codes

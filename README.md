@@ -352,7 +352,7 @@ CMD ["npm", "start"]
 
 > docker run -p 4000:8080 IMAGE_ID/NAME
 
-That's mean anytime that a request comes to port 8080 of `my machine` redirect it to port 8080 `inside the container`
+That's mean anytime that a request comes to port 4000 of `my machine` redirect it to port 8080 `inside the container`
 
 ## Docker compose with multiple local containers
 

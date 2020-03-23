@@ -29,6 +29,10 @@ Installation
 
 _Note_: These steps were successfully completed with Ubuntu Desktop 18 LTS
 
+_Note_: Linux mint 19.2 gotcha on adding repo:
+Malformed input, repository not added.I fixed by just removing the [arch=amd64] from the source.
+> sudo add-apt-repository "deb https://download.docker.com/linux/ubuntu bionic stable"
+
 The docs for Ubuntu installation suggest setting up a Docker repository to install and update from.
 
 This is where you should start:

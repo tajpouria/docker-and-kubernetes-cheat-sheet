@@ -6,7 +6,7 @@ Briefly, because it makes it really easy to install and run software without wor
 
 ## What is docker
 
-Docker is a platform or ecosystem contains a bunch of tools(e.g. Docker Client, Docker Server, Docker Machine, Docker Images, Docker Hub, Docker Compose) that comes together to to creating and running containers.
+Docker is a platform or ecosystem contains a bunch of tools(e.g. Docker Client, Docker Server, Docker Machine, Docker Images, Docker Hub, Docker Compose) that comes together to creating and running containers.
 
 ### What's the container
 
@@ -131,7 +131,7 @@ List all the containers the have been created:
 
 ### Container life cycle
 
-docker run = docker create + docker start -a
+docker run = docker create + docker start
 
 creating a container:
 
@@ -258,13 +258,13 @@ this channels is using to communicate information either into the process or out
 The `-it` flag is shorten of two separate`-i` and `-t` flag:
 
 - -i flags mean when we run this command we are going to attach or terminal to the STDIN channel of running process
-- -f briefly it make the out come texts show pretty(indent and etc)
+- -t briefly make the out come texts show pretty(indent and etc)
 
 ## Getting a command prompt in a container
 
 > docker exec -it 4aec7087de55 sh
 
-`sh` is some kind of command shell program like bash, zsh or ... that allow us to issue command on terminal. Traditionally a lots of containers that your going to be workings with contains sh program
+`sh` is some kind of command shell program like bash, zsh or ... that allow us to issue command on terminal. Traditionally a lots of containers that we are going to working with contains sh program
 
 ### Starting with a shell
 
@@ -280,7 +280,7 @@ Here is the steps we gonna go through:
 
 ### Building a Dockerfile
 
-flow of crating a Dockerfile:
+flow of creating a Dockerfile:
 
 1. specify a base image
 2. run some command to install additional programs
@@ -303,10 +303,10 @@ CMD ["redis-server"]
 
 > docker run ImageID
 
-What's happening after running `docker build .` _dot( . ) means the build context of the container_
+What's happening after running `docker build .` _dot( . ) is the build context of the container_
 
-1. dockerCli will pass DockerFile to dockerDaemon
-2. dockerDaemon look at the localCash to find the `base image` (in our case alpine) then either download it or not from it's library
+1. dockerCli will pass DockerFile to dockerDeamon
+2. dockerDaemon look at the localCash to find the `base image` (in our case alpine) then either download it or using existing one
 3. dockerDaemon will initialized the base image
 4. when dockerDaemon is about to running the `RUN` command it will create a `intermediate container` from the base image (in our case alpine)
 5. dockerDaemon will run the specified command into that intermediate container (in our case `apk add --update redis`) and take it file snapshot (the actual image or images that downloaded)

@@ -508,7 +508,7 @@ services:
   react-app:
     build: # specify costume named docker file to build
       context: .
-      dockerfile: Dockerfile.dev # dockerfile spelling
+      dockerfile: Dockerfile.dev # SUPER IMPORTAND docker file paht relative context
     ports:
       - "3000:8080"
     volumes:

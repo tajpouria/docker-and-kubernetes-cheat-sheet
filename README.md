@@ -298,6 +298,25 @@ RUN apk add --update redis
 # specify a command to run on container startup
 CMD ["redis-server"]
 ```
+### .dockerignore https://codefresh.io/docker-tutorial/not-ignore-dockerignore-2/
+
+Helps to define the build context:
+
+./.dockerignore
+
+```
+# ignore .git and .cache folders
+.git
+.cache
+
+# ignore all *.class files in all folders, including build root
+**/*.class
+
+# ignore all markdown files (md) beside all README*.md other than README-secret.md
+*.md
+!README*.md
+README-secret.md
+```
 
 > docker build .
 

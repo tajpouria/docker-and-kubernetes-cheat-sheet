@@ -31,6 +31,7 @@ _Note_: These steps were successfully completed with Ubuntu Desktop 18 LTS
 
 _Note_: Linux mint 19.2 gotcha on adding repo:
 Malformed input, repository not added.I fixed by just removing the [arch=amd64] from the source.
+
 > sudo add-apt-repository "deb https://download.docker.com/linux/ubuntu bionic stable"
 
 The docs for Ubuntu installation suggest setting up a Docker repository to install and update from.
@@ -298,6 +299,7 @@ RUN apk add --update redis
 # specify a command to run on container startup
 CMD ["redis-server"]
 ```
+
 ### .dockerignore https://codefresh.io/docker-tutorial/not-ignore-dockerignore-2/
 
 Helps to define the build context:
@@ -411,7 +413,7 @@ then we can us it connect our server to redis-container
 ```typescript
 const redisClient = redis.createClient({
   host: "redis-server", // docker parse as an url
-  port: 6379
+  port: 6379,
 });
 ```
 
@@ -1042,6 +1044,10 @@ https://github.com/kubernetes/minikube/issues/2412 :
 
 > minikube start
 
+> minikube start --memory 4096 # Start with 4 G of ram
+
+> minikube dashboard
+
 in order to stop VM
 
 > minikube stop
@@ -1499,9 +1505,54 @@ spec:
               servicePort: 5000
 ```
 
-### Minikube dashboard
+## Istio
 
-> minikube dashboard
+An Istio service mesh is logically split into a data plane and a control plane.
+
+The data plane is composed of a set of intelligent proxies (Envoy) deployed as sidecars. These proxies mediate and control all network communication between microservices. They also collect and report telemetry on all mesh traffic.
+
+The control plane manages and configures the proxies to route traffic.
+
+![control plane and data plane](https://istio.io/latest/docs/ops/deployment/architecture/arch.svg)
+
+### Setup Istio control plane
+
+#### Warmup setup way: Using pre-generated K8s config
+
+1. Setup Istio control plane
+
+[istio-init.yaml](./isitio-fleetman/warmup/istio-init.yaml): Initialize Istio custom resource definitions
+
+> k apply -f istio-init.yaml
+
+[istio-minikube.yaml](./isitio-fleetman/warmup/istio-minikube.yaml): Create control plane components
+
+> k apply -f istio-minikube.yaml
+
+2. Setup kiali username and passprase secret
+
+[kiali-secret.yml](./isitio-fleetman/warmup/kiali-secret.yml)
+
+> k apply -f kiali-secret.yml
+
+3. Setup Istio data plane
+
+There are multiple ways of doing this but here we will do it by setting a label on working namespace and let the istiod to attach the sidecar proxies:
+
+> k label namespace default istio-injection=enabled
+
+> k describe ns default
+
+```sh
+Name:         default
+Labels:       istio-injection=enabled
+Annotations:  <none>
+Status:       Active
+
+No resource quota.
+
+No LimitRange resource.
+```
 
 ## Sundry
 
@@ -1518,7 +1569,7 @@ spec:
 const client = redis.createClient({
   host,
   key,
-  retry_strategy: () => 1000 // if ever loses the connection it's automatically try to reconnect every one second
+  retry_strategy: () => 1000, // if ever loses the connection it's automatically try to reconnect every one second
 });
 
 const sub = client.duplicate(); // Duplicate all current options and return a new redisClient instance, to send regular command to redis while in subscriber mode, just open another connection with a new client.

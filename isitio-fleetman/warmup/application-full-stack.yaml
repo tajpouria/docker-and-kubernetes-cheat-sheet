@@ -14,13 +14,13 @@ spec:
         version: latest
     spec:
       containers:
-      - name: position-simulator
-        image: richardchesterwood/istio-fleetman-position-simulator:5
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: production-microservice
-        command: ["java","-Xmx50m","-jar","webapp.jar"]
-        imagePullPolicy: Always
+        - name: position-simulator
+          image: richardchesterwood/istio-fleetman-position-simulator:5
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production-microservice
+          command: ["java", "-Xmx50m", "-jar", "webapp.jar"]
+          imagePullPolicy: Always
 
 ---
 apiVersion: apps/v1
@@ -39,13 +39,13 @@ spec:
         version: latest
     spec:
       containers:
-      - name: position-tracker
-        image: richardchesterwood/istio-fleetman-position-tracker:5
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: production-microservice
-        command: ["java","-Xmx50m","-jar","webapp.jar"]
-        imagePullPolicy: Always
+        - name: position-tracker
+          image: richardchesterwood/istio-fleetman-position-tracker:5
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production-microservice
+          command: ["java", "-Xmx50m", "-jar", "webapp.jar"]
+          imagePullPolicy: Always
 
 ---
 apiVersion: apps/v1
@@ -64,13 +64,13 @@ spec:
         version: v2
     spec:
       containers:
-      - name: api-gateway
-        image: richardchesterwood/istio-fleetman-api-gateway:5
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: production-microservice
-        command: ["java","-Xmx50m","-jar","webapp.jar"]
-        imagePullPolicy: Always
+        - name: api-gateway
+          image: richardchesterwood/istio-fleetman-api-gateway:5
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production-microservice
+          command: ["java", "-Xmx50m", "-jar", "webapp.jar"]
+          imagePullPolicy: Always
 
 ---
 apiVersion: apps/v1
@@ -89,12 +89,12 @@ spec:
         version: latest
     spec:
       containers:
-      - name: webapp
-        image: richardchesterwood/istio-fleetman-webapp-angular:5
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: production-microservice
-        imagePullPolicy: Always
+        - name: webapp
+          image: richardchesterwood/istio-fleetman-webapp-angular:5
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production-microservice
+          imagePullPolicy: Always
 
 ---
 apiVersion: apps/v1
@@ -113,12 +113,12 @@ spec:
         version: latest
     spec:
       containers:
-      - name: vehicle-telemtry
-        image: richardchesterwood/istio-fleetman-vehicle-telemetry:5
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: production-microservice
-        imagePullPolicy: Always
+        - name: vehicle-telemtry
+          image: richardchesterwood/istio-fleetman-vehicle-telemetry:5
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production-microservice
+          imagePullPolicy: Always
 
 ---
 apiVersion: apps/v1
@@ -137,12 +137,12 @@ spec:
         version: latest
     spec:
       containers:
-      - name: staff-service
-        image: richardchesterwood/istio-fleetman-staff-service:5
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: production-microservice
-        imagePullPolicy: Always
+        - name: staff-service
+          image: richardchesterwood/istio-fleetman-staff-service:5
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production-microservice
+          imagePullPolicy: Always
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -160,12 +160,12 @@ spec:
         version: latest
     spec:
       containers:
-      - name: photo-service
-        image: richardchesterwood/istio-fleetman-photo-service:5
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: production-microservice
-        imagePullPolicy: Always
+        - name: photo-service
+          image: richardchesterwood/istio-fleetman-photo-service:5
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production-microservice
+          imagePullPolicy: Always
 
 ---
 apiVersion: v1
@@ -255,15 +255,15 @@ metadata:
   name: fleetman-driver-monitoring
 spec:
   hosts:
-  - 2oujlno5e4.execute-api.us-east-1.amazonaws.com
+    - 2oujlno5e4.execute-api.us-east-1.amazonaws.com
   location: MESH_EXTERNAL
   ports:
-  - number: 80
-    name: http-port
-    protocol: HTTP
-  - number: 443
-    name: https-port-for-tls-origination
-    protocol: HTTPS
+    - number: 80
+      name: http-port
+      protocol: HTTP
+    - number: 443
+      name: https-port-for-tls-origination
+      protocol: HTTPS
   resolution: DNS
 ---
 # See case #23 - this is a legacy service that we're integrating with
@@ -273,15 +273,16 @@ metadata:
   name: fleetman-driver-monitoring
 spec:
   hosts:
-  - 2oujlno5e4.execute-api.us-east-1.amazonaws.com
+    - 2oujlno5e4.execute-api.us-east-1.amazonaws.com
   http:
-  - match:
-    - port: 80
-    route:
-    - destination:
-        host: 2oujlno5e4.execute-api.us-east-1.amazonaws.com
-        port:
-          number: 443
+    - match:
+        - port: 80
+      timeout: 1s
+      route:
+        - destination:
+            host: 2oujlno5e4.execute-api.us-east-1.amazonaws.com
+            port:
+              number: 443
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
@@ -293,7 +294,7 @@ spec:
     loadBalancer:
       simple: ROUND_ROBIN
     portLevelSettings:
-    - port:
-        number: 443
-      tls:
-        mode: SIMPLE
+      - port:
+          number: 443
+        tls:
+          mode: SIMPLE

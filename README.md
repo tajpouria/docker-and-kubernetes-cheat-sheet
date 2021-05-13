@@ -1554,6 +1554,14 @@ No resource quota.
 No LimitRange resource.
 ```
 
+#### Istion control plance components
+
+- Galley: Reads K8s config (or other orchestration platform) and convert it in the internal format that Istion understands.
+
+- Pilot: Receive formmated configuarion and propagate it across the proxies
+
+- Citadel: Managing TLS/SSL certifciates e.g. secure cominucation between proxies
+
 ## Sundry
 
 ### Node process exit status codes

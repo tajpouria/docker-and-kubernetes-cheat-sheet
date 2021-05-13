@@ -1,0 +1,7 @@
+version: "3.8"
+services:
+  envoy:
+    image: "envoy-demo:latest"
+    ports:
+      - "10000:10000"
+      - "9901:9901"

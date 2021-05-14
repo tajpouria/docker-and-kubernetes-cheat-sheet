@@ -1521,17 +1521,17 @@ The control plane manages and configures the proxies to route traffic.
 
 1. Setup Istio control plane
 
-[istio-init.yaml](./isitio-fleetman/warmup/istio-init.yaml): Initialize Istio custom resource definitions
+[istio-init.yaml](./isitio-fleetman/init-istio/istio-init.yaml): Initialize Istio custom resource definitions
 
 > k apply -f istio-init.yaml
 
-[istio-minikube.yaml](./isitio-fleetman/warmup/istio-minikube.yaml): Create control plane components
+[istio-minikube.yaml](./isitio-fleetman/init-istio/istio-minikube.yaml): Create control plane components
 
 > k apply -f istio-minikube.yaml
 
 2. Setup kiali username and passprase secret
 
-[kiali-secret.yml](./isitio-fleetman/warmup/kiali-secret.yml)
+[kiali-secret.yml](./isitio-fleetman/init-istio/kiali-secret.yml)
 
 > k apply -f kiali-secret.yml
 

@@ -1,35 +1,103 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"networking.istio.io/v1beta1","kind":"VirtualService","metadata":{"annotations":{},"creationTimestamp":"2021-05-17T04:37:24Z","generation":2,"labels":{"kiali_wizard":"weighted_routing"},"managedFields":[{"apiVersion":"networking.istio.io/v1alpha3","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:labels":{".":{},"f:kiali_wizard":{}}},"f:spec":{".":{},"f:hosts":{},"f:http":{}}},"manager":"Go-http-client","operation":"Update","time":"2021-05-17T04:48:39Z"}],"name":"fleetman-staff-service","namespace":"default","resourceVersion":"108685","selfLink":"/apis/networking.istio.io/v1beta1/namespaces/default/virtualservices/fleetman-staff-service","uid":"1e2e4de1-89ee-4b68-884d-d5cee4ba644a"},"spec":{"hosts":["fleetman-staff-service.default.svc.cluster.local"],"http":[{"route":[{"destination":{"host":"fleetman-staff-service.default.svc.cluster.local","subset":"safe"},"weight":0},{"destination":{"host":"fleetman-staff-service.default.svc.cluster.local","subset":"risky"},"weight":100}]}]}}
+  creationTimestamp: "2021-05-17T04:37:24Z"
+  generation: 2
+  labels:
+    kiali_wizard: weighted_routing
+  managedFields:
+    - apiVersion: networking.istio.io/v1alpha3
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:metadata:
+          f:labels:
+            .: {}
+            f:kiali_wizard: {}
+        f:spec:
+          .: {}
+          f:hosts: {}
+          f:http: {}
+      manager: Go-http-client
+      operation: Update
+      time: "2021-05-17T04:48:39Z"
+    - apiVersion: networking.istio.io/v1beta1
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:metadata:
+          f:annotations:
+            .: {}
+            f:kubectl.kubernetes.io/last-applied-configuration: {}
+      manager: kubectl
+      operation: Update
+      time: "2021-05-17T14:48:41Z"
   name: fleetman-staff-service
   namespace: default
+  resourceVersion: "124907"
+  selfLink: /apis/networking.istio.io/v1beta1/namespaces/default/virtualservices/fleetman-staff-service
+  uid: 1e2e4de1-89ee-4b68-884d-d5cee4ba644a
 spec:
   hosts:
-  - fleetman-staff-service.default.svc.cluster.local
+    - fleetman-staff-service.default.svc.cluster.local
   http:
-  - route:
-    - destination:
-        host: fleetman-staff-service.default.svc.cluster.local
-        subset: safe
-      weight: 0
-    - destination:
-        host: fleetman-staff-service.default.svc.cluster.local
-        subset: risky
-      weight: 100
+    - route:
+        - destination:
+            host: fleetman-staff-service.default.svc.cluster.local
+            subset: safe
+          weight: 0
+        - destination:
+            host: fleetman-staff-service.default.svc.cluster.local
+            subset: risky
+          weight: 100
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"networking.istio.io/v1beta1","kind":"DestinationRule","metadata":{"annotations":{},"name":"fleetman-staff-service","namespace":"default"},"spec":{"host":"fleetman-staff-service.default.svc.cluster.local","subsets":[{"labels":{"version":"safe"},"name":"safe"},{"labels":{"version":"risky"},"name":"risky"}],"trafficPolicy":null}}
+  creationTimestamp: "2021-05-17T04:37:24Z"
+  generation: 1
+  labels:
+    kiali_wizard: weighted_routing
+  managedFields:
+    - apiVersion: networking.istio.io/v1alpha3
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:metadata:
+          f:labels:
+            .: {}
+            f:kiali_wizard: {}
+        f:spec:
+          .: {}
+          f:host: {}
+          f:subsets: {}
+      manager: Go-http-client
+      operation: Update
+      time: "2021-05-17T04:37:24Z"
+    - apiVersion: networking.istio.io/v1beta1
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:metadata:
+          f:annotations:
+            .: {}
+            f:kubectl.kubernetes.io/last-applied-configuration: {}
+      manager: kubectl
+      operation: Update
+      time: "2021-05-17T15:41:42Z"
   name: fleetman-staff-service
   namespace: default
+  resourceVersion: "133134"
+  selfLink: /apis/networking.istio.io/v1beta1/namespaces/default/destinationrules/fleetman-staff-service
+  uid: be4baef1-ed6d-4170-be95-b81b90ab6009
 spec:
   host: fleetman-staff-service.default.svc.cluster.local
-  trafficPolicy: ~
   subsets:
-  - labels:
-      version: safe
-    name: safe
-  - labels:
-      version: risky
-    name: risky
-
+    - labels:
+        version: safe
+      name: safe
+    - labels:
+        version: risky
+      name: risky

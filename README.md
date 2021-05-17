@@ -1588,11 +1588,56 @@ metadata:
 
 #### Istio virtual service
 
-Virtual services enables us to configure custome routing to the service mesh.
+vs:
 
-Virtual services are managed by pilot and allows us to change the side-car proxies configuation in a dynamic fashion and manage the incoming traffic that way.
+Virtual services enables us to configure custom routing to the service mesh.
+
+Virtual services are managed by pilot and allows us to change the side-car proxies configuration in a dynamic fashion and manage the incoming traffic that way.
 
 _Despite the name virtual services and services (K8s's services) aren't really related_
+
+dr:
+
+Defining which pod should be a part of each subset
+
+## VS and DR configuration
+
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: fleetman-staff-service # "Just" a name for the virtual service
+  namespace: default
+spec:
+  hosts:
+    - fleetman-staff-service.default.svc.cluster.local # The service DNS (i.e the regular K8s service) name that we're applying routing rules to.
+  http:
+    - route:
+        - destination:
+            host: fleetman-staff-service.default.svc.cluster.local # The target service DNS name
+            subset: safe # Pointing to the name that have been defended by destination rule
+          weight: 0 # Should be integer and not floating point number
+        - destination:
+            host: fleetman-staff-service.default.svc.cluster.local # The target service DNS name
+            subset: risky
+          weight: 100 # Should be integer and not floating point number
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: fleetman-staff-service # "Just" a name for destination rule
+  namespace: default
+spec:
+  host: fleetman-staff-service.default.svc.cluster.local # The target service DNS name
+  trafficPolicy: ~
+  subsets:
+    - labels: # This is actually a pod SELECTOR
+        version: safe # The target pod should have this label
+      name: safe
+    - labels: # This is actually a pod SELECTOR
+        version: risky # The target pod should have this label
+      name: risky
+```
 
 ## Sundry
 

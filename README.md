@@ -1586,6 +1586,14 @@ metadata:
 
 ![](assets/kiali-uses-lables.png)
 
+#### Istio virtual service
+
+Virtual services enables us to configure custome routing to the service mesh.
+
+Virtual services are managed by pilot and allows us to change the side-car proxies configuation in a dynamic fashion and manage the incoming traffic that way.
+
+_Despite the name virtual services and services (K8s's services) aren't really related_
+
 ## Sundry
 
 ### Node process exit status codes

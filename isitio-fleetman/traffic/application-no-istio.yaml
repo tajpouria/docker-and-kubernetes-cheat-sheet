@@ -119,15 +119,16 @@ spec:
   selector:
     matchLabels:
       app: staff-service
-  replicas: 2
+  replicas: 1
   template: # template for the pods
     metadata:
       labels:
         app: staff-service
+        version: safe
     spec:
       containers:
       - name: staff-service
-        image: richardchesterwood/istio-fleetman-staff-service:6
+        image: richardchesterwood/istio-fleetman-staff-service:6-placeholder
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: production-microservice
@@ -148,10 +149,11 @@ spec:
     metadata:
       labels:
         app: staff-service
+        version: risky
     spec:
       containers:
       - name: staff-service
-        image: richardchesterwood/istio-fleetman-staff-service:6-placeholder
+        image: richardchesterwood/istio-fleetman-staff-service:6
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: production-microservice

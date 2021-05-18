@@ -1616,7 +1616,7 @@ spec:
         - destination:
             host: fleetman-staff-service.default.svc.cluster.local # The target service DNS name
             subset: safe # Pointing to the name that have been defended by destination rule
-          weight: 0 # Should be integer and not floating point number
+          weight: 0 # Should be integer and not floating point numberls
         - destination:
             host: fleetman-staff-service.default.svc.cluster.local # The target service DNS name
             subset: risky
@@ -1636,6 +1636,91 @@ spec:
       name: safe
     - labels: # This is actually a pod SELECTOR
         version: risky # The target pod should have this label
+      name: risky
+```
+
+#### Load balancing
+
+#### Session affinity (Sticky session) load balancing
+
+In the following example we uses request header as input of consistent hashing load balancer.
+
+```yml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: fleetman-staff-service
+  namespace: default
+spec:
+  hosts:
+    - fleetman-staff-service.default.svc.cluster.local
+  http:
+    - route:
+        - destination:
+            host: fleetman-staff-service.default.svc.cluster.local
+            subset: all-staff-service
+          weight: 100
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: fleetman-staff-service
+  namespace: default
+spec:
+  host: fleetman-staff-service.default.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      consistentHash:
+        httpHeaderName: "x-myval"
+  subsets:
+    - labels:
+        app: staff-service
+      name: all-staff-service
+```
+
+**Keep in mind you need to propaget the target header in order to loadbalancer to works:**
+
+![](assets/lb-header-propagation.png)
+
+**Sticky session load balancing and weighted routing will not works together. For example in following configuation that uses source IP as the input of consistent hashing algorithem, requets does not always ends up getting routed to a specific upstream:**
+
+```yml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: fleetman-staff-service
+  namespace: default
+spec:
+  hosts:
+    - fleetman-staff-service.default.svc.cluster.local
+  http:
+    - route:
+        - destination:
+            host: fleetman-staff-service.default.svc.cluster.local
+            subset: safe
+          weight: 50
+        - destination:
+            host: fleetman-staff-service.default.svc.cluster.local
+            subset: risky
+          weight: 50
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: fleetman-staff-service
+  namespace: default
+spec:
+  host: fleetman-staff-service.default.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      consistentHash:
+        useSourceIp: true
+  subsets:
+    - labels:
+        version: safe
+      name: safe
+    - labels:
+        version: risky
       name: risky
 ```
 

@@ -232,3 +232,54 @@ In Istio we're using Gateway instead of traditional Ingress. Here's how request 
 - And finally, the application Service routes the request to an application Pod (managed by a deployment).
 
 ![](assets/istio-networking.png)
+
+Gateways will strictly will be used to configure Istio ingress gateway which will spin up on Istio startup
+
+### Gateway configuration
+
+Inside the configuration we can specify for example what kind of requests that should routed inside the cluster:
+
+```yml
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: ingress-gateway # Name of the gateway later on 
+spec:
+  selector:
+    istio: ingressgateway # Select the ingress gateways which confiugarion should applied on for example `istio: gateway` is the default label of istio gateway
+  servers:
+    - port:
+        number: 80 # Allow HTTP requests to enter
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*" # Incoming requests hosts (In this case requests that comes from an external origin)
+
+```
+
+After requests get routed inside the cluster, We're need a way to route them into a specific service. This part of configuration will happen inside the target's virtual service configuration:
+
+```yml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: webapp-vs
+  namespace: default
+spec:
+  gateways:
+    - ingress-gateway # Specify the name of gatway
+  hosts:
+    - "*" # Incoming request host 
+  http:
+    - route:
+        - destination:
+            host: fleetman-webapp.default.svc.cluster.local
+            subset: original
+          weight: 90
+        - destination:
+            host: fleetman-webapp.default.svc.cluster.local
+            subset: experimental
+          weight: 10 
+
+```
+

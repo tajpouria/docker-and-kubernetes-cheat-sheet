@@ -4,7 +4,7 @@ metadata:
   name: ingress-gateway
 spec:
   selector:
-    istio: ingressgatway
+    istio: ingressgateway
   servers:
     - port:
         number: 80
@@ -19,6 +19,8 @@ metadata:
   name: webapp-vs
   namespace: default
 spec:
+  gateways:
+    - ingress-gateway
   hosts:
     - "*"
   http:
@@ -30,7 +32,7 @@ spec:
         - destination:
             host: fleetman-webapp.default.svc.cluster.local
             subset: experimental
-          weight: 10
+          weight: 10 
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule

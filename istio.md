@@ -259,6 +259,8 @@ spec:
 
 After requests get routed inside the cluster, We're need a way to route them into a specific service. This part of configuration will happen inside the target's virtual service configuration:
 
+For example in following configuration we're doing a weighted routing
+
 ```yml
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
@@ -281,5 +283,35 @@ spec:
             subset: experimental
           weight: 10 
 
+```
+
+And in following configuration we're doing a Uri prefix routing:
+
+```yml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: webapp-vs
+  namespace: default
+spec:
+  gateways:
+    - ingress-gateway
+  hosts:
+    - "*"
+  http:
+    - match:
+      - uri:
+          prefix: /experimental
+      route:
+      - destination:
+          host: fleetman-webapp.default.svc.cluster.local
+          subset: experimental
+    - match:
+      - uri:
+          prefix: /
+      route:
+      - destination:
+          host: fleetman-webapp.default.svc.cluster.local
+          subset: original
 ```
 

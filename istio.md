@@ -103,13 +103,13 @@ metadata:
   namespace: default
 spec:
   hosts:
-    - fleetman-staff-service.default.svc.cluster.local # The service DNS (i.e the regular K8s service) name that we're applying routing rules to.
+    - fleetman-staff-service.default.svc.cluster.local # The service DNS (i.e the regular K8s service) name that we're applying routing rules to. (In this case the name of the cluster IP)
   http:
     - route:
         - destination:
-            host: fleetman-staff-service.default.svc.cluster.local # The target service DNS name
-            subset: safe # Pointing to the name that have been defended by destination rule
-          weight: 0 # Should be integer and not floating point numberls
+            host: fleetman-staff-service.default.svc.cluster.local # The target service DNS name (In this case the name of the cluster IP)
+            subset: safe # Pointing to the name that have been defined by destination rule
+          weight: 0 # Should be integer and not floating point numbers
         - destination:
             host: fleetman-staff-service.default.svc.cluster.local # The target service DNS name
             subset: risky
@@ -121,7 +121,7 @@ metadata:
   name: fleetman-staff-service # "Just" a name for destination rule
   namespace: default
 spec:
-  host: fleetman-staff-service.default.svc.cluster.local # The target service DNS name
+  host: fleetman-staff-service.default.svc.cluster.local # The target service DNS name (In this case the name of the cluster IP)
   trafficPolicy: ~
   subsets:
     - labels: # This is actually a pod SELECTOR
@@ -243,7 +243,7 @@ Inside the configuration we can specify for example what kind of requests that s
 apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
-  name: ingress-gateway # Name of the gateway later on 
+  name: ingress-gateway # Name of the gateway later on
 spec:
   selector:
     istio: ingressgateway # Select the ingress gateways which confiugarion should applied on for example `istio: gateway` is the default label of istio gateway
@@ -254,7 +254,6 @@ spec:
         protocol: HTTP
       hosts:
         - "*" # Incoming requests hosts (In this case requests that comes from an external origin)
-
 ```
 
 After requests get routed inside the cluster, We're need a way to route them into a specific service. This part of configuration will happen inside the target's virtual service configuration:
@@ -271,7 +270,7 @@ spec:
   gateways:
     - ingress-gateway # Specify the name of gatway
   hosts:
-    - "*" # Incoming request host 
+    - "*" # Incoming request host
   http:
     - route:
         - destination:
@@ -281,8 +280,7 @@ spec:
         - destination:
             host: fleetman-webapp.default.svc.cluster.local
             subset: experimental
-          weight: 10 
-
+          weight: 10
 ```
 
 And in following configuration we're doing a Uri prefix routing:
@@ -300,18 +298,52 @@ spec:
     - "*"
   http:
     - match:
-      - uri:
-          prefix: /experimental
+        - uri:
+            prefix: /experimental
       route:
-      - destination:
-          host: fleetman-webapp.default.svc.cluster.local
-          subset: experimental
+        - destination:
+            host: fleetman-webapp.default.svc.cluster.local
+            subset: experimental
     - match:
-      - uri:
-          prefix: /
+        - uri:
+            prefix: /
       route:
-      - destination:
-          host: fleetman-webapp.default.svc.cluster.local
-          subset: original
+        - destination:
+            host: fleetman-webapp.default.svc.cluster.local
+            subset: original
 ```
 
+## Dark release
+
+In the following example we're going to configure the virtual service in a way that:
+if incoming request contains `x-my-header: canary` we should response with experimental version of webapp
+otherwise respond with original version.
+
+```yml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: fleetman-webapp
+  namespace: default
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - httpbin-gateway
+  http:
+    - name: "match-canary-header" # Name is optional and will be used for logging purposes
+      match: # If
+        - headers:
+            x-my-header:
+              exact: canary
+      route: # Then
+        - destination:
+            host: fleetman-webapp
+            subset: experimental
+
+    - name: "catch-all" # Catch all (If not matches with upper blocks this rule will be applied)
+      route:
+        - destination:
+            host: fleetman-webapp
+            subset: original
+```

@@ -13,13 +13,13 @@ spec:
         app: position-simulator
     spec:
       containers:
-      - name: position-simulator
-        image: richardchesterwood/istio-fleetman-position-simulator:6
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: production-microservice
-        command: ["java","-Xmx50m","-jar","webapp.jar"]
-        imagePullPolicy: Always
+        - name: position-simulator
+          image: richardchesterwood/istio-fleetman-position-simulator:6
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production-microservice
+          command: ["java", "-Xmx50m", "-jar", "webapp.jar"]
+          imagePullPolicy: Always
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -36,13 +36,13 @@ spec:
         app: position-tracker
     spec:
       containers:
-      - name: position-tracker
-        image: richardchesterwood/istio-fleetman-position-tracker:6
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: production-microservice
-        command: ["java","-Xmx50m","-jar","webapp.jar"]
-        imagePullPolicy: Always
+        - name: position-tracker
+          image: richardchesterwood/istio-fleetman-position-tracker:6
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production-microservice
+          command: ["java", "-Xmx50m", "-jar", "webapp.jar"]
+          imagePullPolicy: Always
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -59,13 +59,13 @@ spec:
         app: api-gateway
     spec:
       containers:
-      - name: api-gateway
-        image: richardchesterwood/istio-fleetman-api-gateway:6
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: production-microservice
-        command: ["java","-Xmx50m","-jar","webapp.jar"]
-        imagePullPolicy: Always
+        - name: api-gateway
+          image: richardchesterwood/istio-fleetman-api-gateway:6
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production-microservice
+          command: ["java", "-Xmx50m", "-jar", "webapp.jar"]
+          imagePullPolicy: Always
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -83,12 +83,12 @@ spec:
         version: original
     spec:
       containers:
-      - name: webapp
-        image: richardchesterwood/istio-fleetman-webapp-angular:6
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: production-microservice
-        imagePullPolicy: Always
+        - name: webapp
+          image: richardchesterwood/istio-fleetman-webapp-angular:6
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production-microservice
+          imagePullPolicy: Always
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -106,12 +106,12 @@ spec:
         version: experimental
     spec:
       containers:
-      - name: webapp
-        image: richardchesterwood/istio-fleetman-webapp-angular:6-experimental
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: production-microservice
-        imagePullPolicy: Always
+        - name: webapp
+          image: richardchesterwood/istio-fleetman-webapp-angular:6-experimental
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production-microservice
+          imagePullPolicy: Always
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -128,37 +128,37 @@ spec:
         app: vehicle-telemetry
     spec:
       containers:
-      - name: vehicle-telemtry
-        image: richardchesterwood/istio-fleetman-vehicle-telemetry:6
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: production-microservice
-        imagePullPolicy: Always
+        - name: vehicle-telemtry
+          image: richardchesterwood/istio-fleetman-vehicle-telemetry:6
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production-microservice
+          imagePullPolicy: Always
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: staff-service
+  name: staff-service-original-version
 spec:
   selector:
     matchLabels:
       app: staff-service
-  replicas: 0
+  replicas: 1
   template: # template for the pods
     metadata:
       labels:
         app: staff-service
-        version: safe
+        version: risky
     spec:
       containers:
-      - name: staff-service
-        image: richardchesterwood/istio-fleetman-staff-service:6-placeholder
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: production-microservice
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8080
+        - name: staff-service
+          image: richardchesterwood/istio-fleetman-staff-service:6
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production-microservice
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -176,14 +176,14 @@ spec:
         version: risky
     spec:
       containers:
-      - name: staff-service
-        image: richardchesterwood/istio-fleetman-staff-service:6
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: production-microservice
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8080
+        - name: staff-service
+          image: richardchesterwood/istio-fleetman-staff-service:6-placeholder
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production-microservice
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
 ---
 apiVersion: v1
 kind: Service

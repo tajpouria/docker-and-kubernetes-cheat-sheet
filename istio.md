@@ -347,3 +347,5 @@ spec:
             host: fleetman-webapp
             subset: original
 ```
+
+Bare in mind this implementation requires header propagation

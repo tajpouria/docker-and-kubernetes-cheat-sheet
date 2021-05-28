@@ -349,3 +349,51 @@ spec:
 ```
 
 Bare in mind this implementation requires header propagation
+
+## Fault injection
+
+Deliberately inject like aborting from responding or responding with delay in order to test the system fault tolerance
+
+Abort fault:
+
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: fleetman-vehicle-telemetry
+  namespace: default
+spec:
+  hosts:
+    - fleetman-vehicle-telemetry.default.svc.cluster.local
+  http:
+    - fault:
+        abort:
+          httpStatus: 503
+          percentage:
+            value: 50.0 # 50 percent of the time respond with 503
+      route:
+        - destination:
+            host: fleetman-vehicle-telemetry.default.svc.cluster.local
+```
+
+Delay fault:
+
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: fleetman-vehicle-telemetry
+  namespace: default
+spec:
+  hosts:
+    - fleetman-vehicle-telemetry.default.svc.cluster.local
+  http:
+    - fault:
+        delay:
+          fixedDelay: 10s
+          percentage:
+            value: 100.0 # 100 percent of the time respond with 10 seconds delay
+      route:
+        - destination:
+            host: fleetman-vehicle-telemetry.default.svc.cluster.local
+```

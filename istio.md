@@ -397,3 +397,23 @@ spec:
         - destination:
             host: fleetman-vehicle-telemetry.default.svc.cluster.local
 ```
+
+## Circuit breaker (Outlier detection)
+
+```yml
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: staff-service-circuit-breaker
+spec:
+  host: "fleetman-staff-service.default.svc.cluster.local" # This is the name of the k8s service that we're targeting
+
+  # host: "*.default.svc.cluster.local" Also viable to use wildcards for example in this case it means to apply circuit breaker to all services that exists in default name space
+
+  trafficPolicy: # Props description: https://istio.io/latest/docs/reference/config/networking/destination-rule/#OutlierDetection
+    outlierDetection: # Circuit Breakers HAVE TO BE SWITCHED ON
+      maxEjectionPercent: 100
+      consecutive5xxErrors: 2
+      interval: 10s
+      baseEjectionTime: 30s
+```

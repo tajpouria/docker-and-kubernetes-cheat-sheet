@@ -1,0 +1,13 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: circuit-breaker-for-the-entire-default-namespace
+spec:
+  host: "fleetman-staff-service.default.svc.cluster.local" # This is the name of the k8s service that we're configuring
+
+  trafficPolicy: # Props description: https://istio.io/latest/docs/reference/config/networking/destination-rule/#OutlierDetection
+    outlierDetection: # Circuit Breakers HAVE TO BE SWITCHED ON
+      maxEjectionPercent: 100
+      consecutive5xxErrors: 2
+      interval: 10s
+      baseEjectionTime: 30s

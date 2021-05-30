@@ -424,7 +424,7 @@ Istio **automatically** configures workload sidecars to use mutual TLS when call
 
 In order to enforce mutual TLS (enable STRICT mode) in a namespace uer `PeerAuthentication` CRD provided by Istio:
 
-````yml
+```yml
 # This will enforce that ONLY traffic that is TLS is allowed between proxies
 apiVersion: "security.istio.io/v1beta1"
 kind: "PeerAuthentication"
@@ -434,5 +434,83 @@ metadata:
 spec:
   mtls:
     mode: STRICT
-    ```
-````
+```
+
+## IstioCTL
+
+### Using built-in configuration profiles
+
+> istioctl manifest apply --set profile=demo
+
+[List of profiles](https://istio.io/latest/docs/setup/additional-setup/config-profiles/)
+
+**Use default profile for production. The demo profile does not have allocate enough amount of resources to run Istio on production comfortably**
+
+### Adding addons
+
+Example enabling Kiali and Grafana
+
+> istioctl manifest apply --set profile=demo --set addonComponents.kiali.enabled=true --set addonComponents.kiali.enabled=true --set addonComponents.grafana.enabled=true
+
+### Output profiles
+
+> istioctl profile dump default > default-profile.yaml
+
+Then you can apply this file to cluster using istioctl
+
+> istioctl manifest apply -f default-profile.yaml
+
+[In not modern K8s clusters like Minikube you're gonna have third party authentication issue for that reason you can use first party authentication using following flag](https://istio.io/latest/docs/ops/best-practices/security/#configure-third-party-service-account-tokens):
+
+> istioctl manifest apply -f default-profile.yaml --set values.global.jwtPolicy=first-party-jwt
+
+## Generate Istio Manifest YAML
+
+Dump profile:
+
+> istioctl manifest apply -f raw-default-profile.yaml
+
+Generate Manifest (Turn into valid K8s configuration then we can apply using `k apply -f` afterwards):
+
+> istioctl manifest generate -f raw-default-profile.yaml --set values.global.jwtPolicy=first-party-jwt > istio-minikube.yaml
+
+## Configure Istio services
+
+If you want to access the add on components - Kiali, Grafana and Jaeger - through a browser, you should be able to configure NodePorts using the IstioOperator API.
+
+For example, to switch on Kiali's NodePort, you can use the following:
+
+```yaml
+kiali:
+  enabled: true
+  k8s:
+    replicaCount: 1
+    service:
+      type: NodePort
+      ports:
+        - port: 20001
+          nodePort: 31000
+```
+
+You can use any nodePort you like - I'm using port 31000 here to be consistent with the port we used on the course yaml.
+
+This works for Grafana as well.
+
+Unfortunately, I've been unable to get this working for Jaeger. The following block does not work:
+
+```yaml
+tracing:
+  enabled: true
+  k8s:
+    service:
+      type: NodePort
+      ports:
+        - port: 16686
+          nodePort: 31001
+```
+
+I suspect this is an oversight in the release of Istioctl I was using to record (1.5.1). I've contacted the Istio developers and as soon as I get guidance on how to handle this, I will update this lecture and replace with a proper video.
+
+In the meantime, it's not ideal, but you can manually edit the generated istio-configuration.yaml file to replace the ClusterIP services with NodePorts.
+
+Be careful if you do this - if you re-generate, you will lose your changes - but it's a decent workaround for now at least.

@@ -417,3 +417,22 @@ spec:
       interval: 10s
       baseEjectionTime: 30s
 ```
+
+## Mutual TLS
+
+Istio **automatically** configures workload sidecars to use mutual TLS when calling other workloads. By default, Istio configures the destination workloads using `PERMISSIVE` mode. When `PERMISSIVE` mode is enabled, a service can accept both plain text and mutual TLS traffic. In order to only allow mutual TLS traffic, the configuration needs to be changed to `STRICT` mode.
+
+In order to enforce mutual TLS (enable STRICT mode) in a namespace uer `PeerAuthentication` CRD provided by Istio:
+
+````yml
+# This will enforce that ONLY traffic that is TLS is allowed between proxies
+apiVersion: "security.istio.io/v1beta1"
+kind: "PeerAuthentication"
+metadata:
+  name: "default"
+  namespace: "istio-system"
+spec:
+  mtls:
+    mode: STRICT
+    ```
+````

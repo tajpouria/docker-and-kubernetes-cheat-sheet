@@ -49,7 +49,7 @@ No LimitRange resource.
 
 ### Istio control plane components
 
-- Galley: Reads K8s config (or other orchestration platform) and convert it in the internal format that Istion understands.
+- Galley: Reads K8s config (or other orchestration platform) and convert it in the internal format that istio understands.
 
 - Pilot: Receive formmated configuarion and propagate it across the proxies
 

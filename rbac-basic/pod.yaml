@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shopping-api
+  namespace: shopping
+  labels:
+    name: shopping-api
+spec:
+  containers:
+    - name: shopping-api
+      image: nginx
+      resources:
+        limits:
+          memory: "128Mi"
+          cpu: "500m"
+  serviceAccountName: shopping-api

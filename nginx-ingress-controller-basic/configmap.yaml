@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: example-config
+  namespace: example-app
+data:
+  config.json: |
+    {
+      "environment": "development"
+    }

@@ -1,1 +1,2 @@
-![](../assets/vb-networking.png)
+![vb networking table summary](../assets/vb-networking.png)
+

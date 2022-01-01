@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hello-world
+  namespace: default
+  labels:
+    app: hello-world
+spec:
+  completions: 2
+  parallelism: 2
+
+  template:
+    metadata:
+      name: hello-world
+      labels:
+        app: hello-world
+    spec:
+      containers:
+        - name: hello-world
+          image: busybox
+          command: ["sh", "-c", "ls /nobexistingdirectory"]
+      restartPolicy: Never

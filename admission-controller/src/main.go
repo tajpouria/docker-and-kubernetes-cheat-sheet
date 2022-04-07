@@ -1,19 +1,47 @@
 package main
 
 import (
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"log"
 	"net/http"
 
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
+
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"k8s.io/client-go/kubernetes"
 	rest "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
-	"os"
-	"path/filepath"
+
+	"flag"
+	"io/ioutil"
+	"strconv"
+
+	"errors"
+
+	"k8s.io/api/admission/v1beta1"
+
+	"encoding/json"
+
+	apiv1 "k8s.io/api/core/v1"
 )
+
+type ServerParameters struct {
+	port     int    // webhook server port
+	certFile string // path to the x509 certificate for https
+	keyFile  string // path to the x509 private key matching `CertFile`
+}
+
+type patchOperation struct {
+	Op    string      `json:"op"`
+	Path  string      `json:"path"`
+	Value interface{} `json:"value,omitempty"`
+}
+
+var parameters ServerParameters
 
 var (
 	universalDeserializer = serializer.NewCodecFactory(runtime.NewScheme()).UniversalDeserializer()
@@ -22,9 +50,14 @@ var (
 var config *rest.Config
 var clientSet *kubernetes.Clientset
 
-func main() {
+func main() {  
 	useKubeConfig := os.Getenv("USE_KUBECONFIG")
 	kubeConfigFilePath := os.Getenv("KUBECONFIG")
+
+	flag.IntVar(&parameters.port, "port", 8443, "Webhook server port.")
+	flag.StringVar(&parameters.certFile, "tlsCertFile", "/etc/webhook/certs/tls.crt", "File containing the x509 Certificate for HTTPS.")
+	flag.StringVar(&parameters.keyFile, "tlsKeyFile", "/etc/webhook/certs/tls.key", "File containing the x509 private key to --tlsCertFile.")
+	flag.Parse()
 
 	if len(useKubeConfig) == 0 {
 		// default to service account in cluster token
@@ -53,6 +86,7 @@ func main() {
 		}
 		config = c
 	}
+
 	cs, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		panic(err.Error())
@@ -60,10 +94,9 @@ func main() {
 	clientSet = cs
 
 	test()
-
 	http.HandleFunc("/", HandleRoot)
 	http.HandleFunc("/mutate", HandleMutate)
-	log.Fatal(http.ListenAndServe(":80", nil))
+	log.Fatal(http.ListenAndServeTLS(":"+strconv.Itoa(parameters.port), parameters.certFile, parameters.keyFile, nil))
 }
 
 func HandleRoot(w http.ResponseWriter, r *http.Request) {
@@ -71,5 +104,66 @@ func HandleRoot(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleMutate(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("HandleMutate!"))
+	body, err := ioutil.ReadAll(r.Body)
+	err = ioutil.WriteFile("/tmp/request", body, 0644)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	var admissionReviewReq v1beta1.AdmissionReview
+
+	if _, _, err := universalDeserializer.Decode(body, nil, &admissionReviewReq); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Errorf("could not deserialize request: %v", err)
+	} else if admissionReviewReq.Request == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		errors.New("malformed admission review: request is nil")
+	}
+
+	fmt.Printf("Type: %v \t Event: %v \t Name: %v \n",
+		admissionReviewReq.Request.Kind,
+		admissionReviewReq.Request.Operation,
+		admissionReviewReq.Request.Name,
+	)
+
+	var pod apiv1.Pod
+
+	err = json.Unmarshal(admissionReviewReq.Request.Object.Raw, &pod)
+
+	if err != nil {
+		fmt.Errorf("could not unmarshal pod on admission request: %v", err)
+	}
+
+	var patches []patchOperation
+
+	labels := pod.ObjectMeta.Labels
+	labels["example-webhook"] = "it-worked"
+
+	patches = append(patches, patchOperation{
+		Op:    "add",
+		Path:  "/metadata/labels",
+		Value: labels,
+	})
+
+	patchBytes, err := json.Marshal(patches)
+
+	if err != nil {
+		fmt.Errorf("could not marshal JSON patch: %v", err)
+	}
+
+	admissionReviewResponse := v1beta1.AdmissionReview{
+		Response: &v1beta1.AdmissionResponse{
+			UID:     admissionReviewReq.Request.UID,
+			Allowed: true,
+		},
+	}
+
+	admissionReviewResponse.Response.Patch = patchBytes
+
+	bytes, err := json.Marshal(&admissionReviewResponse)
+	if err != nil {
+		fmt.Errorf("marshaling response: %v", err)
+	}
+
+	w.Write(bytes)
 }

@@ -74,3 +74,14 @@ go build
 export USE_KUBECONFIG=true
 ./webhook
 # Out of the container
+
+# Build the webhook server
+cd src/
+docker build . -t tajpouria/example-webhook:v1
+docker push tajpouria/example-webhook
+
+kubectl apply -f tls/example-webhook-tls.secret.yaml
+kubectl apply -f rbac.yaml
+kubectl apply -f deployment.yaml
+
+k apply -f webhook.yaml

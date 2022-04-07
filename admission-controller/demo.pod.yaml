@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "demo-pod"
+  namespace: default
+  labels:
+    example-webhook-enabled: "true"
+spec:
+  containers:
+    - name: nginx
+      image: "nginx:latest"
+      resources:
+        limits:
+          cpu: 200m
+          memory: 500Mi
+        requests:
+          cpu: 100m
+          memory: 200Mi

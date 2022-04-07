@@ -7,9 +7,7 @@ import (
 )
 
 func test() {
-
 	pods, err := clientSet.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
-
 	if err != nil {
 		panic(err.Error())
 	}

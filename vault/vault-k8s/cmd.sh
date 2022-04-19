@@ -67,9 +67,9 @@ k api-versions
 # Make sure admissionregistration.k8s.io/v1 are enabled
 
 # Create Vault k8s injector
-k apply -n vault-example -f ./injector
+k apply -f ./injector -n vault-example
 
-k exec -it -n vault-example vault-example-0 -c vault
+k exec -it -n vault-example vault-example-0 -c vault -- sh
 # Inside the container
 vault login
 vault auth enable kubernetes
@@ -77,3 +77,35 @@ vault write auth/kubernetes/config \
   token_reviewer_jwt="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
   kubernetes_host=https://${KUBERNETES_PORT_443_TCP_ADDR}:443 \
   kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+
+# Basic Secret Injection
+
+# Create a role for our app (AppRole)
+vault write auth/kubernetes/role/basic-secret-role \
+  bound_service_account_names=basic-secret \
+  bound_service_account_namespaces=vault-example \
+  policies=basic-secret-policy \
+  ttl=1h
+
+# Create a policy
+cat <<EOF >/home/vault/app-policy.hcl
+path "secret/basic-secret/*" {
+  capabilities = ["read"]
+}
+EOF
+vault policy write basic-secret-policy /home/vault/app-policy.hcl
+
+# Create a secret
+vault secrets enable -path=secret/ kv
+vault kv put secret/basic-secret/helloworld username=dbuser password=sUp3rS3cUr3P@ssw0rd
+
+# Outside of the container
+
+k apply -f example-apps/basic-secret/ -n vault-example
+
+# Check the injected secret
+k exec -it -n vault-example $(k get po -n vault-example -l app=basic-secret -o name) -- sh
+# Inside the container
+cat /vault/secrets/helloworld
+
+# Outside of the container

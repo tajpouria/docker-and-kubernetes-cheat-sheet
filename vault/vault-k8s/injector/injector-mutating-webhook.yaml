@@ -4,19 +4,24 @@ metadata:
   name: vault-example-agent-injector-cfg
   labels:
     app.kubernetes.io/name: vault-example-agent-injector
+    app.kubernetes.io/instance: vault
 webhooks:
   - name: vault.hashicorp.com
     sideEffects: None
-    admissionReviewVersions: ["v1", "v1beta1"]
+    admissionReviewVersions:
+      - "v1"
+      - "v1beta1"
     clientConfig:
       service:
         name: vault-example-agent-injector-svc
-        namespace: vault-example
         path: "/mutate"
+        namespace: "vault-example"
       caBundle: ""
     rules:
       - operations: ["CREATE", "UPDATE"]
         apiGroups: [""]
         apiVersions: ["v1"]
         resources: ["pods"]
-    namespaceSelector:
+    namespaceSelector: {}
+    objectSelector: {}
+    failurePolicy: Ignore

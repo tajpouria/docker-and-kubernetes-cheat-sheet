@@ -59,3 +59,21 @@ done
 # Port forward the UI
 k port-forward -n vault-example svc/vault-example-ui 8080
 # Navigate to https://localhost:8080/
+
+## Secret injection
+
+# Check the k8s API version
+k api-versions
+# Make sure admissionregistration.k8s.io/v1 are enabled
+
+# Create Vault k8s injector
+k apply -n vault-example -f ./injector
+
+k exec -it -n vault-example vault-example-0 -c vault
+# Inside the container
+vault login
+vault auth enable kubernetes
+vault write auth/kubernetes/config \
+  token_reviewer_jwt="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+  kubernetes_host=https://${KUBERNETES_PORT_443_TCP_ADDR}:443 \
+  kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt

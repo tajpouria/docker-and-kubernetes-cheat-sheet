@@ -57,4 +57,5 @@ done
 # Outside of container
 
 # Port forward the UI
-k port-forward -n vault-example vault-example-0 8080
+k port-forward -n vault-example svc/vault-example-ui 8080
+# Navigate to https://localhost:8080/

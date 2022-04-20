@@ -27,8 +27,9 @@ spec:
     spec:
       serviceAccountName: dynamic-postgres
       containers:
-      - name: app
-        image: jweissig/app:0.0.1
+        - name: app
+          image: jweissig/app:0.0.1
+
 ---
 apiVersion: v1
 kind: ServiceAccount

@@ -1,5 +1,9 @@
 #!/bin/bash
 
+######################
+## Vault Deployment ##
+######################
+
 # Create cluster
 k3d cluster create --volume ${PWD}/data:/mnt/data --agents 2
 
@@ -60,14 +64,20 @@ done
 k port-forward -n vault-example svc/vault-example-ui 8080
 # Navigate to https://localhost:8080/
 
-## Secret injection
+###############################
+## Create Vault k8s injector ##
+###############################
 
 # Check the k8s API version
 k api-versions
 # Make sure admissionregistration.k8s.io/v1 are enabled
 
-# Create Vault k8s injector
 k apply -f ./injector -n vault-example
+
+############################
+## Basic Secret Injection ##
+############################
+# You must skip this if you want to configure dynamic secret injection.
 
 k exec -it -n vault-example vault-example-0 -c vault -- sh
 # Inside the container
@@ -109,3 +119,60 @@ k exec -it -n vault-example $(k get po -n vault-example -l app=basic-secret -o n
 cat /vault/secrets/helloworld
 
 # Outside of the container
+
+##############################
+## Dynamic Secret Injection ##
+##############################
+
+k create ns postgres
+k apply -n postgres -f example-apps/dynamic-postgresql/postgres.yaml
+k apply -n postgres -f example-apps/dynamic-postgresql/pgadmin.yaml
+
+k exec -it -n vault-example vault-example-0 -- sh
+# Inside the container
+vault login
+vault auth enable kubernetes
+vault write auth/kubernetes/config \
+  token_reviewer_jwt="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+  kubernetes_host=https://${KUBERNETES_PORT_443_TCP_ADDR}:443 \
+  kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+
+# Enable database engine
+vault secrets enable database
+
+# Configure DB Credential creation
+vault write database/config/postgresdb \
+  plugin_name=postgresql-database-plugin \
+  allowed_roles="sql-role" \
+  connection_url="postgresql://{{username}}:{{password}}@postgres.postgres:5432/postgresdb?sslmode=disable" \
+  username="postgresadmin" \
+  password="admin123"
+
+vault write database/roles/sql-role \
+  db_name=postgresdb \
+  creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
+        GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";" \
+  default_ttl="1h" \
+  max_ttl="24h"
+
+# Test
+vault read database/creds/sql-role
+
+# Create a policy
+cat <<EOF >/home/vault/postgres-app-policy.hcl
+path "database/creds/sql-role" {
+  capabilities = ["read"]
+}
+EOF
+vault policy write postgres-app-policy /home/vault/postgres-app-policy.hcl
+
+# Bind our role to a service account for our application
+vault write auth/kubernetes/role/sql-role \
+  bound_service_account_names=dynamic-postgres \
+  bound_service_account_namespaces=vault-example \
+  policies=postgres-app-policy \
+  ttl=1h
+
+# Outside of the container
+
+k -n vault-example apply -f example-apps/dynamic-postgresql/deployment.yaml

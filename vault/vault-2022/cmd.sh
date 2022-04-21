@@ -96,7 +96,7 @@ k apply -f manifests/vault.yaml -n vault
 k -n vault exec -it vault-0 -- sh
 # Inside the container
 vault operator init
-for i in {1..3}; do
+for i in $(seq 1 3); do
   vault operator unseal
 done
 exit
@@ -104,8 +104,7 @@ exit
 
 k -n vault exec -it vault-1 -- sh
 # Inside the container
-vault operator init
-for i in {1..3}; do
+for i in $(seq 1 3); do
   vault operator unseal
 done
 exit
@@ -113,9 +112,57 @@ exit
 
 k -n vault exec -it vault-2 -- sh
 # Inside the container
-vault operator init
-for i in {1..3}; do
+for i in $(seq 1 3); do
   vault operator unseal
 done
+exit
+# Outside of the container
+
+############################
+## Basic Secret Injection ##
+############################
+
+# Enable Kubernetes authentication
+k exec -it vault-0 -n vault -- sh
+# Inside the container
+vault login
+vault auth enable kubernetes
+vault write auth/kubernetes/config \
+  token_reviewer_jwt="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+  kubernetes_host=https://${KUBERNETES_PORT_443_TCP_ADDR}:443 \
+  kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+
+# Create a role for our app
+vault write auth/kubernetes/role/basic-secret-role \
+  bound_service_account_names=basic-secret \
+  bound_service_account_namespaces=example-app \
+  policies=basic-secret-policy \
+  ttl=1h
+# The above maps our Kubernetes service account, used by our pod, to a policy.
+# Now lets create the policy to map our service account to a bunch of secrets
+cat <<EOF >/home/vault/app-policy.hcl
+path "secret/basic-secret/*" {
+  capabilities = ["read"]
+}
+EOF
+vault policy write basic-secret-policy /home/vault/app-policy.hcl
+
+# Create the secret
+vault secrets enable -path=secret/ kv
+vault kv put secret/basic-secret/helloworld username=dbuser password=sUp3rS3cUr3P@ssw0rd
+
+exit
+# Outside of the container
+
+# Deploy the example application
+kubectl create ns example-app
+kubectl -n example-app apply -f ./example-apps/basic-secret/deployment.yaml
+
+k exec -it -n example-app $(k get po -n example-app -l app=basic-secret -o name) -- sh
+# Inside the container
+
+# Checkout the secret
+cat /vault/secrets/helloworld
+
 exit
 # Outside of the container

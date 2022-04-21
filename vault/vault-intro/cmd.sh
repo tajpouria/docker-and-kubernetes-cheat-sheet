@@ -7,9 +7,7 @@
 # Create cluster
 k3d cluster create --volume ${PWD}/data:/mnt/data --agents 2
 
-# Use the CFSSL to generate self signed TLS certificate to be used
-# within the webhook server.
-
+# Use the CFSSL to generate self signed TLS certificate.
 docker run -it -v --rm --volume ${PWD}:/work -w /work debian bash
 # Inside the container
 apt update

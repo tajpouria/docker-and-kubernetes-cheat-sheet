@@ -6,3 +6,5 @@
 
 - Install the Prometheus.
 - Install the Grafana.
+- Install [Node Exporter](https://github.com/prometheus/node_exporter) and add it as target.
+- Install [WMI Exporter](https://github.com/prometheus-community/windows_exporter) and add it as target.

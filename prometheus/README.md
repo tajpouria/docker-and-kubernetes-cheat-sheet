@@ -2,7 +2,7 @@
 
 [Curriculum](https://github.com/in4it/prometheus-course)
 
-## Introduction
+## [Introduction](00-introduction)
 
 - Install the Prometheus.
 - Install the Grafana.

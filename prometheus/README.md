@@ -17,3 +17,8 @@
   - Histogram: The request latencies.
 - Configure a [push gateway](https://github.com/prometheus/pushgateway), register it as target and write a python cron job that pushes the following metric.
   - Counter: The total amount of seconds took to operate its job. (Use a dummy delay to simulate this)
+- Use [file based service discovery](https://prometheus.io/docs/guides/file-sd/) to discover scrape targets, validate the configuration by adding and removing node exporters.
+
+## Notes
+
+- Experiment with service discovery on K8s.

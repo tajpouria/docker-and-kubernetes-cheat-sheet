@@ -20,6 +20,8 @@ jobs:
             type: registry-image
             source:
               repository: busybox # images are pulled from docker hub by default
+          inputs: # add the get step as an input to this task
+            - name: repo
           # The command Concourse will run inside the container
           # echo "Hello world!"
           outputs:
@@ -32,6 +34,7 @@ jobs:
               - |
                 ls -l .
                 echo "hello from another step!" > the-artifact/message
+                cat repo/README.md
       # Add a second task that reads the contents of the-artifact/message
       - task: read-the-artifact
         config:

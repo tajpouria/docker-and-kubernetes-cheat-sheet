@@ -1,0 +1,52 @@
+resources:
+  - name: repo
+    type: git
+    source:
+      uri: https://github.com/tajpouria/docker-and-kubernetes-cheat-sheet
+
+jobs:
+  - name: hello-world-job
+    plan:
+      # Add a get step referencing the resource
+      - get: repo
+        trigger: true # tell Concourse to trigger this job when new versions are emitted
+      - task: hello-world-task
+        config:
+          # Tells Concourse which type of worker this task should run on
+          platform: linux
+          # This is one way of telling Concourse which container image to use for a
+          # task. We'll explain this more when talking about resources
+          image_resource:
+            type: registry-image
+            source:
+              repository: busybox # images are pulled from docker hub by default
+          # The command Concourse will run inside the container
+          # echo "Hello world!"
+          outputs:
+            - name: the-artifact
+          run:
+            # This is a neat way of embedding a script into a task
+            path: sh
+            args:
+              - -cx
+              - |
+                ls -l .
+                echo "hello from another step!" > the-artifact/message
+      # Add a second task that reads the contents of the-artifact/message
+      - task: read-the-artifact
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: busybox
+          # To receive "the-artifact", specify it as an input
+          inputs:
+            - name: the-artifact
+          run:
+            path: sh
+            args:
+              - -cx
+              - |
+                ls -l .
+                cat the-artifact/message

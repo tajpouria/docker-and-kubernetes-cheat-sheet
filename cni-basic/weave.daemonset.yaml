@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: weave
+  namespace: default
+  labels:
+    app: weave
+spec:
+  selector:
+    matchLabels:
+      app: weave
+  template:
+    metadata:
+      labels:
+        app: weave
+    spec:
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+        - effect: NoExecute
+          operator: Exists
+      containers:
+        - name: weave
+          command:
+            - /home/weave/launch.sh
+          image: docker.io/weaveworks/weave-kube:2.5.1
+          volumeMounts:
+            - mountPath: /weavedb
+              name: weavedb
+            - mountPath: /host/opt
+              name: cni-bin
+            - mountPath: /host/home
+              name: cni-bin2
+            - mountPath: /host/etc
+              name: cni-conf
+hostNetwork: true
